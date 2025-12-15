@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { Messages } from '../components/messages/Messages';
@@ -8,6 +8,12 @@ import { ChatInput } from '../components/ChatInput';
 import { ConversationSidebar } from '../components/ConversationSidebar';
 import { useAutoScroll } from '../hooks/useAutoScroll';
 import { useConversations } from '../hooks/useConversations';
+
+// Utility to shuffle and limit questions
+function getRandomQuestions(questions: string[], limit: number): string[] {
+  const shuffled = [...questions].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, limit);
+}
 
 // URL utilities
 function getConversationIdFromUrl(): string | null {
@@ -27,6 +33,12 @@ export function ChatInterface() {
   const [input, setInput] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [initialLoadDone, setInitialLoadDone] = useState(false);
+
+  // Get 15 random starter questions (memoized so they don't change on re-renders)
+  const randomQuestions = useMemo(
+    () => getRandomQuestions(STARTER_QUESTIONS, 15),
+    []
+  );
 
   // Conversation management
   const {
@@ -325,7 +337,7 @@ export function ChatInterface() {
             <Messages
               messages={messages}
               status={status}
-              starterQuestions={STARTER_QUESTIONS}
+              starterQuestions={randomQuestions}
               onStarterQuestion={handleStarterQuestion}
             />
             <div ref={scrollEndRef} />
