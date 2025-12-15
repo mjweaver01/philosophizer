@@ -9,8 +9,8 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div className="flex items-center justify-center h-full">
-      <div className="text-center py-12 px-4">
-        <h2 className="text-3xl font-semibold text-text mb-3">
+      <div className="text-center py-8">
+        <h2 className="text-3xl font-semibold text-text">
           Ask anything about philosophy or theology
         </h2>
         <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3 mt-8 mx-auto">

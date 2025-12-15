@@ -57,6 +57,19 @@ async function generateEmbedding(text: string): Promise<number[]> {
 }
 
 /**
+ * Parse a URL into host, port, and ssl components for ChromaDB client
+ */
+function parseChromaUrl(url: string): { host: string; port: number; ssl: boolean } {
+  const parsed = new URL(url);
+  const ssl = parsed.protocol === 'https:';
+  const defaultPort = ssl ? 443 : 8000;
+  const port = parsed.port ? parseInt(parsed.port, 10) : defaultPort;
+  // Include full hostname with protocol prefix stripped
+  const host = parsed.hostname;
+  return { host, port, ssl };
+}
+
+/**
  * Initialize the ChromaDB client
  */
 export async function initVectorStore(): Promise<{
@@ -67,8 +80,9 @@ export async function initVectorStore(): Promise<{
     return { client: chromaClient, collection };
   }
 
-  // Initialize ChromaDB client with configurable URL
-  chromaClient = new ChromaClient({ path: CHROMA_URL });
+  // Initialize ChromaDB client with host, port, and ssl (path is deprecated)
+  const { host, port, ssl } = parseChromaUrl(CHROMA_URL);
+  chromaClient = new ChromaClient({ host, port, ssl });
 
   // Get or create the collection with cosine similarity (better for text)
   collection = await chromaClient.getOrCreateCollection({

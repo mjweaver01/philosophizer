@@ -12,4 +12,12 @@ export const STARTER_QUESTIONS = [
   'How should I treat others according to Confucius?',
   'What did Buddha teach about suffering?',
   'Does God exist? What are the arguments?',
+  'What did John Calvin teach about predestination?',
+  'How can I know if I am truly saved according to the Puritans?',
+  'What did John Wesley mean by a heart "strangely warmed"?',
+  "What is the Christian life like according to Bunyan's Pilgrim's Progress?",
+  'What did Jonathan Edwards say about religious affections?',
+  'How did Spurgeon balance God\'s sovereignty with evangelism?',
+  'What did the Reformers teach about grace and works?',
+  'How should Christians respond to unjust rulers according to Knox?',
 ];

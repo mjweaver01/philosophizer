@@ -2,7 +2,7 @@
 
 Agentic chat with tools and reasoning, using the wisdom of history's greatest philosophers and theologians.
 
-Built with Bun, React, and TypeScript.
+Built with Bun, React, TypeScript, and ChromaDB for semantic search over primary source texts.
 
 ## Technologies Used
 
@@ -10,6 +10,7 @@ Built with Bun, React, and TypeScript.
 - **AI SDK**: Vercel AI SDK v6 (beta)
 - **Frontend**: React 19, TypeScript
 - **Styling**: TailwindCSS 4
+- **Vector Database**: ChromaDB (for RAG and conversation storage)
 - **Markdown**: Marked with KaTeX for math rendering
 - **Validation**: Zod schemas
 
@@ -18,6 +19,7 @@ Built with Bun, React, and TypeScript.
 ### Prerequisites
 
 - [Bun](https://bun.sh) installed
+- [Docker](https://docker.com) installed (for ChromaDB)
 
 ### Installation
 
@@ -38,6 +40,118 @@ AI_API_KEY=lm-studio
 # Model Configuration
 LLM_MODEL=qwen3-1.7b
 SEARCH_MODEL=gpt-4.1-mini
+
+# Optional: ChromaDB (defaults to localhost:8000)
+CHROMA_URL=http://localhost:8000
+```
+
+## ChromaDB Setup
+
+### Start ChromaDB
+
+```bash
+bun run chroma
+```
+
+### Stop ChromaDB
+
+```bash
+bun run chroma:stop
+```
+
+### ChromaDB Admin UI
+
+View and manage your vector database with a web interface:
+
+```bash
+# Start the admin UI
+bun run chroma:admin
+
+# Open http://localhost:3001 in your browser
+# Use http://host.docker.internal:8000 as the connection URL
+
+# Stop the admin UI
+bun run chroma:admin:stop
+```
+
+## RAG (Retrieval Augmented Generation)
+
+The app includes a collection of primary source philosophical and theological texts that are indexed for semantic search.
+
+### Index Texts
+
+```bash
+bun run rag:index
+```
+
+### Clear the Index
+
+```bash
+bun run rag:clear
+```
+
+### RAG API Endpoints
+
+Once the server is running, you can query the vector store via API:
+
+**Query passages:**
+
+```bash
+curl -X POST http://localhost:1738/rag \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What is virtue?", "limit": 5}'
+```
+
+With optional filters:
+
+```bash
+curl -X POST http://localhost:1738/rag \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What is virtue?", "philosopher": "aristotle", "limit": 10}'
+```
+
+**Get collection stats:**
+
+```bash
+curl http://localhost:1738/rag
+```
+
+## Conversations API
+
+Save and recall chat conversations (stored in ChromaDB).
+
+**List all conversations:**
+
+```bash
+curl http://localhost:1738/conversations
+```
+
+**Create a new conversation:**
+
+```bash
+curl -X POST http://localhost:1738/conversations \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Discussion about virtue"}'
+```
+
+**Get a conversation with messages:**
+
+```bash
+curl http://localhost:1738/conversations/{id}
+```
+
+**Update conversation (title or messages):**
+
+```bash
+curl -X PUT http://localhost:1738/conversations/{id} \
+  -H "Content-Type: application/json" \
+  -d '{"title": "New title", "messages": [...]}'
+```
+
+**Delete a conversation:**
+
+```bash
+curl -X DELETE http://localhost:1738/conversations/{id}
 ```
 
 ## Usage
@@ -58,4 +172,12 @@ bun run start
 
 ```bash
 bun run dev:debug
+```
+
+## Docker Compose
+
+For production deployment with all services:
+
+```bash
+docker compose up -d
 ```

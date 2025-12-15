@@ -11,9 +11,9 @@
     "format:check": "prettier --check .",
     "chroma": "docker run -d --name chroma -p 8000:8000 -v chroma-data:/chroma/chroma chromadb/chroma",
     "chroma:stop": "docker stop chroma && docker rm chroma",
+    "chroma:admin": "docker run -d --name chroma-admin -p 3001:3001 fengzhichao/chromadb-admin",
+    "chroma:admin:stop": "docker stop chroma-admin && docker rm chroma-admin",
     "rag:index": "bun run src/rag/scripts/indexTexts.ts",
-    "rag:query": "bun run src/rag/scripts/queryTest.ts",
-    "rag:stats": "bun run src/rag/scripts/indexTexts.ts --stats",
     "rag:clear": "bun run src/rag/scripts/indexTexts.ts --clear"
   },
   "devDependencies": {

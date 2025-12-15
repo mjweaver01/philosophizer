@@ -3,6 +3,7 @@ import { readUrl } from './readUrl';
 import { wikipedia } from './wikipedia';
 import { newsSearch } from './newsSearch';
 import { saveNote, recallNotes, clearNotes } from './notes';
+import { recallMemories, getMemoryDetails } from './memories';
 import { philosopherTools } from './philosophers';
 
 export const tools = {
@@ -13,5 +14,7 @@ export const tools = {
   saveNote,
   recallNotes,
   clearNotes,
+  recallMemories,
+  getMemoryDetails,
   ...philosopherTools,
 };

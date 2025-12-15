@@ -153,6 +153,27 @@ export const PHILOSOPHERS: Record<string, Philosopher> = {
         format: 'txt',
         description: "Aristotle's works on logic",
       },
+      {
+        id: 'aristotle-history-animals',
+        title: 'History of Animals',
+        url: 'https://www.gutenberg.org/cache/epub/59058/pg59058.txt',
+        format: 'txt',
+        description: 'Foundational work on zoology and natural history',
+      },
+      {
+        id: 'aristotle-athenian-constitution',
+        title: 'The Athenian Constitution',
+        url: 'https://www.gutenberg.org/cache/epub/26095/pg26095.txt',
+        format: 'txt',
+        description: 'Analysis of Athenian political institutions',
+      },
+      {
+        id: 'aristotle-categories',
+        title: 'The Categories',
+        url: 'https://www.gutenberg.org/cache/epub/6763/pg6763.txt',
+        format: 'txt',
+        description: 'Foundational work on ontology and classification',
+      },
     ],
     keyExcerpts: [
       {
@@ -358,6 +379,77 @@ export const PHILOSOPHERS: Record<string, Philosopher> = {
         url: 'https://www.gutenberg.org/cache/epub/1726/pg1726.txt',
         format: 'txt',
         description: 'Dialogue on the nature of knowledge',
+      },
+      {
+        id: 'plato-cratylus',
+        title: 'Cratylus',
+        url: 'https://www.gutenberg.org/cache/epub/1616/pg1616.txt',
+        format: 'txt',
+        description: 'Dialogue on the correctness of names and language',
+      },
+      {
+        id: 'plato-ion',
+        title: 'Ion',
+        url: 'https://www.gutenberg.org/cache/epub/1635/pg1635.txt',
+        format: 'txt',
+        description: 'Dialogue on poetry and divine inspiration',
+      },
+      {
+        id: 'plato-sophist',
+        title: 'Sophist',
+        url: 'https://www.gutenberg.org/cache/epub/1735/pg1735.txt',
+        format: 'txt',
+        description:
+          'Dialogue on being, non-being, and the nature of the sophist',
+      },
+      {
+        id: 'plato-statesman',
+        title: 'Statesman',
+        url: 'https://www.gutenberg.org/cache/epub/1738/pg1738.txt',
+        format: 'txt',
+        description: 'Dialogue on political philosophy and the ideal ruler',
+      },
+      {
+        id: 'plato-protagoras',
+        title: 'Protagoras',
+        url: 'https://www.gutenberg.org/cache/epub/1591/pg1591.txt',
+        format: 'txt',
+        description: 'Dialogue on virtue and whether it can be taught',
+      },
+      {
+        id: 'plato-critias',
+        title: 'Critias',
+        url: 'https://www.gutenberg.org/cache/epub/1571/pg1571.txt',
+        format: 'txt',
+        description: 'Dialogue on the legend of Atlantis',
+      },
+      {
+        id: 'plato-philebus',
+        title: 'Philebus',
+        url: 'https://www.gutenberg.org/cache/epub/1744/pg1744.txt',
+        format: 'txt',
+        description: 'Dialogue on pleasure and the good life',
+      },
+      {
+        id: 'plato-charmides',
+        title: 'Charmides',
+        url: 'https://www.gutenberg.org/cache/epub/1580/pg1580.txt',
+        format: 'txt',
+        description: 'Dialogue on temperance and self-knowledge',
+      },
+      {
+        id: 'plato-lysis',
+        title: 'Lysis',
+        url: 'https://www.gutenberg.org/cache/epub/1579/pg1579.txt',
+        format: 'txt',
+        description: 'Dialogue on the nature of friendship',
+      },
+      {
+        id: 'plato-laches',
+        title: 'Laches',
+        url: 'https://www.gutenberg.org/cache/epub/1584/pg1584.txt',
+        format: 'txt',
+        description: 'Dialogue on courage and military virtue',
       },
     ],
     keyExcerpts: [
@@ -916,6 +1008,21 @@ export const PHILOSOPHERS: Record<string, Philosopher> = {
         format: 'txt',
         description: 'Masterwork on Christianity and society',
       },
+      {
+        id: 'augustine-enchiridion',
+        title: 'Enchiridion (Handbook on Faith, Hope and Love)',
+        url: 'https://www.gutenberg.org/cache/epub/27380/pg27380.txt',
+        format: 'txt',
+        description: 'Concise summary of Christian doctrine',
+      },
+      {
+        id: 'augustine-christian-doctrine',
+        title: 'On Christian Doctrine',
+        url: 'https://www.gutenberg.org/cache/epub/66442/pg66442.txt',
+        format: 'txt',
+        description:
+          'Guide to interpreting Scripture and teaching Christian truth',
+      },
     ],
     keyExcerpts: [
       {
@@ -1037,6 +1144,13 @@ export const PHILOSOPHERS: Record<string, Philosopher> = {
         url: 'https://www.gutenberg.org/cache/epub/19950/pg19950.txt',
         format: 'txt',
         description: 'On Christ and the sacraments',
+      },
+      {
+        id: 'aquinas-summa-contra-gentiles',
+        title: 'Summa Contra Gentiles',
+        url: 'https://www.gutenberg.org/cache/epub/42814/pg42814.txt',
+        format: 'txt',
+        description: 'Apologetic work defending Christianity through reason',
       },
     ],
     keyExcerpts: [
@@ -1164,6 +1278,29 @@ export const PHILOSOPHERS: Record<string, Philosopher> = {
         format: 'txt',
         description: 'Declaration of Lutheran beliefs',
       },
+      {
+        id: 'luther-table-talk',
+        title: 'Table Talk',
+        url: 'https://www.gutenberg.org/cache/epub/9841/pg9841.txt',
+        format: 'txt',
+        description: "Luther's informal conversations on theology and life",
+      },
+      {
+        id: 'luther-bondage-will',
+        title: 'The Bondage of the Will',
+        url: 'https://www.gutenberg.org/cache/epub/37380/pg37380.txt',
+        format: 'txt',
+        description:
+          "Luther's response to Erasmus on free will and predestination",
+      },
+      {
+        id: 'luther-large-catechism',
+        title: 'The Large Catechism',
+        url: 'https://www.gutenberg.org/cache/epub/2601/pg2601.txt',
+        format: 'txt',
+        description:
+          "Luther's comprehensive catechism for teaching Christian doctrine",
+      },
     ],
     keyExcerpts: [
       {
@@ -1193,6 +1330,716 @@ export const PHILOSOPHERS: Record<string, Philosopher> = {
       'church authority',
       'grace',
       'Christian freedom',
+    ],
+  },
+
+  johnCalvin: {
+    id: 'johnCalvin',
+    name: 'John Calvin',
+    era: '1509–1564',
+    tradition: 'Protestant Reformation / Reformed Theology',
+    description:
+      "French theologian and pastor who was a principal figure in the development of Reformed Christianity. His Institutes of the Christian Religion is one of the most influential works of Protestant theology, emphasizing God's sovereignty and predestination.",
+    keyTeachings: [
+      "God's Absolute Sovereignty: God is in complete control of all things",
+      'Predestination: God has eternally chosen some for salvation (election)',
+      'Total Depravity: Humans are completely corrupted by sin and cannot save themselves',
+      'Irresistible Grace: Those whom God has chosen cannot ultimately resist His call',
+      'Perseverance of the Saints: True believers will persevere to the end',
+    ],
+    keyConcepts: [
+      {
+        name: 'TULIP (Five Points of Calvinism)',
+        explanation:
+          'Total Depravity, Unconditional Election, Limited Atonement, Irresistible Grace, Perseverance of the Saints. These doctrines summarize Reformed soteriology.',
+        relatedTerms: ['Reformed theology', 'doctrines of grace', 'Dort'],
+      },
+      {
+        name: 'Double Predestination',
+        explanation:
+          "God has not only chosen some for salvation (election) but has also passed over others (reprobation). This is not arbitrary but according to God's just and mysterious will.",
+        relatedTerms: ['election', 'reprobation', 'divine decree'],
+      },
+      {
+        name: 'Covenant Theology',
+        explanation:
+          'God relates to humanity through covenants. The Covenant of Works with Adam and the Covenant of Grace through Christ structure redemptive history.',
+        relatedTerms: [
+          'covenant of works',
+          'covenant of grace',
+          'federal theology',
+        ],
+      },
+      {
+        name: 'The Third Use of the Law',
+        explanation:
+          'Beyond revealing sin and restraining evil, the law serves as a guide for Christian living. Believers, freed from condemnation, follow the law out of gratitude.',
+        relatedTerms: ['moral law', 'sanctification', 'obedience'],
+      },
+    ],
+    notableWorks: [
+      'Institutes of the Christian Religion',
+      'Commentaries on the Bible',
+      'Commentary on Romans',
+      'Treatise on Relics',
+      'The Necessity of Reforming the Church',
+    ],
+    textSources: [
+      {
+        id: 'calvin-institutes-vol1',
+        title: 'Institutes of the Christian Religion, Vol. 1',
+        url: 'https://www.gutenberg.org/cache/epub/45315/pg45315.txt',
+        format: 'txt',
+        description:
+          'Foundational systematic theology of Reformed Christianity',
+      },
+      {
+        id: 'calvin-institutes-vol2',
+        title: 'Institutes of the Christian Religion, Vol. 2',
+        url: 'https://www.gutenberg.org/cache/epub/45001/pg45001.txt',
+        format: 'txt',
+        description:
+          'Continuation of the Institutes covering church and sacraments',
+      },
+    ],
+    keyExcerpts: [
+      {
+        work: 'Institutes of the Christian Religion, I.1.1',
+        passage:
+          'Nearly all the wisdom we possess, that is to say, true and sound wisdom, consists of two parts: the knowledge of God and of ourselves.',
+        context: 'The famous opening of the Institutes',
+      },
+      {
+        work: 'Institutes, III.21.5',
+        passage:
+          'By predestination we mean the eternal decree of God, by which he determined with himself whatever he wished to happen with regard to every man.',
+        context: 'Definition of predestination',
+      },
+    ],
+    famousQuotes: [
+      'There is not one blade of grass, there is no color in this world that is not intended to make us rejoice.',
+      'We are nowhere forbidden to laugh, or to be satisfied with food... or to be delighted with music, or to drink wine.',
+      "Man's mind is like a store of idolatry and superstition; so much so that if a man believes his own mind it is certain that he will forsake God.",
+      'However many blessings we expect from God, His infinite liberality will always exceed all our wishes and our thoughts.',
+      'There is no knowing that does not begin with knowing God.',
+    ],
+    areasOfExpertise: [
+      'Reformed theology',
+      'predestination',
+      'sovereignty of God',
+      'church governance',
+      'biblical interpretation',
+      'systematic theology',
+    ],
+  },
+
+  huldrychZwingli: {
+    id: 'huldrychZwingli',
+    name: 'Huldrych Zwingli',
+    era: '1484–1531',
+    tradition: 'Protestant Reformation / Swiss Reformed',
+    description:
+      "Swiss reformer and leader of the Reformation in Zurich. He emphasized the authority of Scripture and rejected Catholic practices not explicitly found in the Bible. His views on the Eucharist differed from Luther's, leading to significant theological debate.",
+    keyTeachings: [
+      'Sola Scriptura: Only what is found in Scripture should be practiced in the church',
+      "The Lord's Supper is a memorial, not a physical presence of Christ",
+      'Images and icons should be removed from churches',
+      'Infant baptism is valid as a sign of the covenant',
+      'Church and state should work together for godly society',
+    ],
+    keyConcepts: [
+      {
+        name: 'Memorial View of the Eucharist',
+        explanation:
+          'The Lord\'s Supper is a remembrance of Christ\'s sacrifice, not a physical or spiritual eating of Christ\'s body. "This is my body" means "This signifies my body."',
+        relatedTerms: ['symbolic view', 'memorialism', 'sacrament'],
+      },
+      {
+        name: 'Regulative Principle',
+        explanation:
+          'Only what Scripture explicitly commands or implies for worship is permitted. This led to the removal of organs, images, and elaborate ceremonies from Reformed worship.',
+        relatedTerms: ['worship', 'simplicity', 'biblical authority'],
+      },
+      {
+        name: 'Covenant Continuity',
+        explanation:
+          "The Old and New Testaments are unified by God's one covenant of grace. Infant baptism corresponds to circumcision as the sign of the covenant.",
+        relatedTerms: ['paedobaptism', 'covenant sign', 'continuity'],
+      },
+    ],
+    notableWorks: [
+      'Commentary on True and False Religion',
+      'Sixty-Seven Articles',
+      'A Short Christian Instruction',
+    ],
+    textSources: [
+      {
+        id: 'zwingli-selected-works',
+        title: 'Selected Works of Huldreich Zwingli',
+        url: 'https://www.gutenberg.org/cache/epub/46961/pg46961.txt',
+        format: 'txt',
+        description: "Collection of Zwingli's theological writings",
+      },
+    ],
+    keyExcerpts: [
+      {
+        work: 'Sixty-Seven Articles, Article 1',
+        passage:
+          'All who say that the Gospel is invalid without the confirmation of the Church err and slander God.',
+        context: 'Asserting the authority of Scripture over Church tradition',
+      },
+    ],
+    famousQuotes: [
+      "For God's sake, do not put yourself at odds with the Word of God.",
+      'In the matter of baptism, if I may be pardoned for saying it, I can only conclude that all the doctors have been in error from the time of the apostles.',
+      'The business of truth is not to be deserted even to the sacrifice of our lives.',
+    ],
+    areasOfExpertise: [
+      'Reformed theology',
+      'sacramental theology',
+      'church reform',
+      'biblical authority',
+      'iconoclasm',
+    ],
+  },
+
+  johnKnox: {
+    id: 'johnKnox',
+    name: 'John Knox',
+    era: '1514–1572',
+    tradition: 'Protestant Reformation / Scottish Presbyterianism',
+    description:
+      'Scottish minister and theologian who led the Protestant Reformation in Scotland. His fiery preaching and writing established the Presbyterian Church of Scotland and influenced Reformed Christianity worldwide.',
+    keyTeachings: [
+      'The Bible is the sole authority for faith and practice',
+      'Worship must be purified of Catholic innovations',
+      'The church should be governed by elders (presbyters), not bishops',
+      "Christians may resist tyrannical rulers who oppose God's law",
+      'Education is essential for a godly society',
+    ],
+    keyConcepts: [
+      {
+        name: 'Presbyterian Polity',
+        explanation:
+          'Church governance by elected elders (presbyters) in graded courts: session, presbytery, synod, and general assembly. No single person holds supreme authority.',
+        relatedTerms: ['elders', 'church courts', 'representative government'],
+      },
+      {
+        name: 'Right of Resistance',
+        explanation:
+          'When rulers command what God forbids or forbid what God commands, lesser magistrates and even the people may resist. Knox argued this especially against Catholic monarchs.',
+        relatedTerms: ['tyrannicide', 'political theology', 'covenant'],
+      },
+      {
+        name: 'Book of Common Order',
+        explanation:
+          "Knox's liturgy for the Scottish church, emphasizing simplicity, biblical preaching, and congregational participation over elaborate ceremony.",
+        relatedTerms: ['liturgy', 'worship', 'Scottish Reformation'],
+      },
+    ],
+    notableWorks: [
+      'The History of the Reformation of Religion in Scotland',
+      'The First Blast of the Trumpet Against the Monstrous Regiment of Women',
+      'Book of Common Order',
+    ],
+    textSources: [
+      {
+        id: 'knox-reformation-scotland',
+        title: 'The History of the Reformation of Religion in Scotland',
+        url: 'https://www.gutenberg.org/cache/epub/48131/pg48131.txt',
+        format: 'txt',
+        description: "Knox's firsthand account of the Scottish Reformation",
+      },
+    ],
+    keyExcerpts: [
+      {
+        work: 'History of the Reformation',
+        passage: 'A man with God is always in the majority.',
+        context: "Knox's confidence in divine providence",
+      },
+    ],
+    famousQuotes: [
+      'Give me Scotland, or I die!',
+      'A man with God is always in the majority.',
+      'Lord, give me Scotland or I die.',
+      'The fearful will not inherit the kingdom of God.',
+    ],
+    areasOfExpertise: [
+      'Scottish Reformation',
+      'Presbyterianism',
+      'political theology',
+      'church governance',
+      'resistance theory',
+    ],
+  },
+
+  philipMelanchthon: {
+    id: 'philipMelanchthon',
+    name: 'Philip Melanchthon',
+    era: '1497–1560',
+    tradition: 'Protestant Reformation / Lutheran Theology',
+    description:
+      'German reformer, theologian, and educator who was Martin Luther\'s closest collaborator. Known as "Praeceptor Germaniae" (Teacher of Germany), he systematized Lutheran theology and authored the Augsburg Confession.',
+    keyTeachings: [
+      'Justification by faith alone as the central article of faith',
+      'The distinction between Law and Gospel in Scripture',
+      'Human reason has a proper but limited role in theology',
+      'Classical education serves the church and society',
+      'Ecumenical dialogue is valuable for Christian unity',
+    ],
+    keyConcepts: [
+      {
+        name: 'Loci Communes (Common Places)',
+        explanation:
+          'The first systematic presentation of Lutheran theology (1521). Organized around key topics (loci) such as sin, law, grace, and justification.',
+        relatedTerms: [
+          'systematic theology',
+          'doctrinal summary',
+          'Reformation',
+        ],
+      },
+      {
+        name: 'Law and Gospel',
+        explanation:
+          'Scripture contains two kinds of words: Law (what God demands) and Gospel (what God gives in Christ). Proper distinction between them is key to sound theology.',
+        relatedTerms: ['distinction', 'preaching', 'hermeneutics'],
+      },
+      {
+        name: 'Adiaphora',
+        explanation:
+          'Matters neither commanded nor forbidden by Scripture (ceremonies, vestments) are "things indifferent." Churches have freedom in these areas.',
+        relatedTerms: ['indifferent things', 'church practices', 'freedom'],
+      },
+    ],
+    notableWorks: [
+      'Loci Communes',
+      'Augsburg Confession',
+      'Apology of the Augsburg Confession',
+      'Commentary on Romans',
+    ],
+    textSources: [
+      {
+        id: 'melanchthon-loci-communes',
+        title: 'Loci Communes (Common Places)',
+        url: 'https://www.gutenberg.org/cache/epub/56389/pg56389.txt',
+        format: 'txt',
+        description: 'First systematic theology of the Reformation',
+      },
+    ],
+    keyExcerpts: [
+      {
+        work: 'Loci Communes',
+        passage:
+          'To know Christ means to know his benefits, and not as they teach, to reflect upon his natures and the modes of his incarnation.',
+        context: "Emphasis on Christ's saving work over abstract speculation",
+      },
+    ],
+    famousQuotes: [
+      'To know Christ is to know his benefits.',
+      'In essentials, unity; in non-essentials, liberty; in all things, charity.',
+      'We are saved by grace alone, but the grace that saves is never alone.',
+    ],
+    areasOfExpertise: [
+      'Lutheran theology',
+      'systematic theology',
+      'education',
+      'ecumenism',
+      'biblical interpretation',
+    ],
+  },
+
+  johnWesley: {
+    id: 'johnWesley',
+    name: 'John Wesley',
+    era: '1703–1791',
+    tradition: 'Methodism / Evangelical Christianity',
+    description:
+      'English cleric and theologian who founded the Methodist movement. His emphasis on personal holiness, evangelism, and social reform transformed English Christianity and spread worldwide.',
+    keyTeachings: [
+      "Prevenient Grace: God's grace works in all people before conversion",
+      'Justification by Faith: Salvation through trusting in Christ alone',
+      'The New Birth: A real transformation of the heart by the Holy Spirit',
+      'Sanctification: Growing in holiness throughout the Christian life',
+      'Entire Sanctification (Christian Perfection): The possibility of perfect love for God and neighbor in this life',
+    ],
+    keyConcepts: [
+      {
+        name: 'The Wesleyan Quadrilateral',
+        explanation:
+          'Four sources of theological reflection: Scripture (primary), Tradition, Reason, and Experience. These guide faithful interpretation and living.',
+        relatedTerms: ['theological method', 'authority', 'interpretation'],
+      },
+      {
+        name: 'Prevenient Grace',
+        explanation:
+          'God\'s grace that "goes before" conversion, enabling fallen humans to respond to the gospel. Without it, no one could seek God.',
+        relatedTerms: ['preventing grace', 'enabling grace', 'free will'],
+      },
+      {
+        name: 'Entire Sanctification',
+        explanation:
+          'The Methodist distinctive that believers can be made perfect in love in this life—not sinless perfection but a heart wholly devoted to God.',
+        relatedTerms: ['Christian perfection', 'holiness', 'perfect love'],
+      },
+      {
+        name: 'Class Meetings',
+        explanation:
+          'Small groups meeting weekly for accountability, confession, and mutual support in the Christian life. Central to Methodist spiritual formation.',
+        relatedTerms: ['small groups', 'accountability', 'discipleship'],
+      },
+    ],
+    notableWorks: [
+      'Sermons on Several Occasions',
+      'A Plain Account of Christian Perfection',
+      'The Journal of John Wesley',
+      'Explanatory Notes on the New Testament',
+    ],
+    textSources: [
+      {
+        id: 'wesley-sermons-vol1',
+        title: 'Sermons on Several Occasions, Volume 1',
+        url: 'https://www.gutenberg.org/cache/epub/45849/pg45849.txt',
+        format: 'txt',
+        description: "Wesley's foundational sermons on Methodist doctrine",
+      },
+      {
+        id: 'wesley-journal',
+        title: 'The Journal of John Wesley',
+        url: 'https://www.gutenberg.org/cache/epub/2520/pg2520.txt',
+        format: 'txt',
+        description: "Wesley's famous diary of his ministry and spiritual life",
+      },
+      {
+        id: 'wesley-christian-perfection',
+        title: 'A Plain Account of Christian Perfection',
+        url: 'https://www.gutenberg.org/cache/epub/26720/pg26720.txt',
+        format: 'txt',
+        description: "Wesley's mature statement on holiness and sanctification",
+      },
+    ],
+    keyExcerpts: [
+      {
+        work: 'Journal, May 24, 1738',
+        passage:
+          'I felt my heart strangely warmed. I felt I did trust in Christ, Christ alone, for salvation; and an assurance was given me that He had taken away my sins.',
+        context: "Wesley's famous Aldersgate experience of conversion",
+      },
+      {
+        work: 'Sermon 5: Justification by Faith',
+        passage:
+          'Faith is the only condition of justification... the sole condition, without which none is justified; the only condition which is immediately and proximately necessary to justification.',
+        context: "Wesley's affirmation of sola fide",
+      },
+    ],
+    famousQuotes: [
+      'Do all the good you can, by all the means you can, in all the ways you can.',
+      'I felt my heart strangely warmed.',
+      'The world is my parish.',
+      'Give me one hundred men who fear nothing but sin and desire nothing but God, and I will shake the world.',
+      'Catch on fire with enthusiasm and people will come for miles to watch you burn.',
+    ],
+    areasOfExpertise: [
+      'holiness',
+      'sanctification',
+      'evangelism',
+      'revival',
+      'social reform',
+      'practical theology',
+    ],
+  },
+
+  johnBunyan: {
+    id: 'johnBunyan',
+    name: 'John Bunyan',
+    era: '1628–1688',
+    tradition: 'Puritan / Baptist Christianity',
+    description:
+      "English Puritan preacher and author whose allegorical novel The Pilgrim's Progress became one of the most widely read books in the English language. Imprisoned for preaching without a license, he wrote his masterpiece in jail.",
+    keyTeachings: [
+      'The Christian life is a pilgrimage through spiritual dangers',
+      'Salvation is by grace alone through faith in Christ',
+      'Spiritual warfare is real and constant',
+      'Perseverance through trials is essential',
+      'Scripture is the guide for the Christian journey',
+    ],
+    keyConcepts: [
+      {
+        name: 'Pilgrim Allegory',
+        explanation:
+          'The Christian life as a journey from the City of Destruction to the Celestial City. Obstacles like the Slough of Despond, Vanity Fair, and Doubting Castle represent spiritual struggles.',
+        relatedTerms: ['journey', 'allegory', 'spiritual warfare'],
+      },
+      {
+        name: 'Burden of Sin',
+        explanation:
+          'Christian carries a heavy burden on his back (representing sin and guilt) until he reaches the Cross, where it falls off and rolls into the empty tomb.',
+        relatedTerms: ['conviction', 'guilt', 'forgiveness'],
+      },
+      {
+        name: 'Vanity Fair',
+        explanation:
+          'A town that represents worldly temptations and persecutions. Christians must pass through but not conform to its values.',
+        relatedTerms: ['worldliness', 'persecution', 'faithfulness'],
+      },
+    ],
+    notableWorks: [
+      "The Pilgrim's Progress",
+      'Grace Abounding to the Chief of Sinners',
+      'The Holy War',
+      'The Life and Death of Mr. Badman',
+    ],
+    textSources: [
+      {
+        id: 'bunyan-pilgrims-progress',
+        title: "The Pilgrim's Progress",
+        url: 'https://www.gutenberg.org/cache/epub/131/pg131.txt',
+        format: 'txt',
+        description: 'Classic allegory of the Christian life',
+      },
+      {
+        id: 'bunyan-grace-abounding',
+        title: 'Grace Abounding to the Chief of Sinners',
+        url: 'https://www.gutenberg.org/cache/epub/654/pg654.txt',
+        format: 'txt',
+        description: "Bunyan's spiritual autobiography",
+      },
+      {
+        id: 'bunyan-holy-war',
+        title: 'The Holy War',
+        url: 'https://www.gutenberg.org/cache/epub/7140/pg7140.txt',
+        format: 'txt',
+        description: 'Allegory of spiritual warfare for the soul',
+      },
+    ],
+    keyExcerpts: [
+      {
+        work: "The Pilgrim's Progress",
+        passage:
+          'As I walked through the wilderness of this world, I lighted on a certain place where was a den, and laid me down in that place to sleep; and as I slept, I dreamed a dream.',
+        context: 'The famous opening of the allegory',
+      },
+      {
+        work: 'Grace Abounding',
+        passage:
+          "One day, as I was passing in the field... this sentence fell upon my soul: Thy righteousness is in heaven. And I saw, with the eyes of my soul, Jesus Christ at God's right hand.",
+        context: "Bunyan's moment of spiritual breakthrough",
+      },
+    ],
+    famousQuotes: [
+      'You have not lived today until you have done something for someone who can never repay you.',
+      'In prayer it is better to have a heart without words than words without a heart.',
+      'He that is down needs fear no fall; he that is low no pride.',
+      'Run when I can, walk when I cannot run, and creep when I cannot walk.',
+    ],
+    areasOfExpertise: [
+      'allegory',
+      'Puritan spirituality',
+      'spiritual warfare',
+      'perseverance',
+      'conversion',
+    ],
+  },
+
+  jonathanEdwards: {
+    id: 'jonathanEdwards',
+    name: 'Jonathan Edwards',
+    era: '1703–1758',
+    tradition: 'Reformed / Great Awakening',
+    description:
+      "American Congregationalist preacher, philosopher, and theologian who played a critical role in the First Great Awakening. Widely regarded as America's greatest theologian, he combined rigorous Calvinist theology with deep spiritual passion.",
+    keyTeachings: [
+      "God's sovereignty in salvation is absolute",
+      'True religion consists in holy affections',
+      'The beauty of God is the foundation of all true virtue',
+      "Revival is a sovereign work of God's Spirit",
+      'Hell is a real and eternal punishment for sin',
+    ],
+    keyConcepts: [
+      {
+        name: 'Religious Affections',
+        explanation:
+          'True religion is not merely intellectual assent but involves the whole person, especially the affections (emotions/will). Holy affections include love for God, hatred of sin, and longing for Christ.',
+        relatedTerms: ['affections', 'heart religion', 'true conversion'],
+      },
+      {
+        name: 'Divine Beauty',
+        explanation:
+          'God is infinitely beautiful in His holiness. Perceiving this beauty is the essence of conversion and the foundation of true virtue.',
+        relatedTerms: ['beauty', 'holiness', 'aesthetics', 'virtue'],
+      },
+      {
+        name: 'Freedom of the Will',
+        explanation:
+          "The will is always determined by the strongest motive. True freedom is not freedom from causes but freedom to act according to one's desires—which in sinners are always toward evil apart from grace.",
+        relatedTerms: ['compatibilism', 'determinism', 'moral inability'],
+      },
+    ],
+    notableWorks: [
+      'A Treatise Concerning Religious Affections',
+      'Freedom of the Will',
+      'Sinners in the Hands of an Angry God',
+      'The Nature of True Virtue',
+      'A History of the Work of Redemption',
+    ],
+    textSources: [
+      {
+        id: 'edwards-religious-affections',
+        title: 'A Treatise Concerning Religious Affections',
+        url: 'https://www.gutenberg.org/cache/epub/17659/pg17659.txt',
+        format: 'txt',
+        description: "Edwards' analysis of true vs. false religious experience",
+      },
+      {
+        id: 'edwards-freedom-will',
+        title: 'Freedom of the Will',
+        url: 'https://www.gutenberg.org/cache/epub/17660/pg17660.txt',
+        format: 'txt',
+        description:
+          'Philosophical defense of divine sovereignty and human responsibility',
+      },
+      {
+        id: 'edwards-works-vol1',
+        title: 'The Works of Jonathan Edwards, Vol. 1',
+        url: 'https://www.gutenberg.org/cache/epub/57463/pg57463.txt',
+        format: 'txt',
+        description: 'Collection including sermons and treatises',
+      },
+      {
+        id: 'edwards-works-vol2',
+        title: 'The Works of Jonathan Edwards, Vol. 2',
+        url: 'https://www.gutenberg.org/cache/epub/57466/pg57466.txt',
+        format: 'txt',
+        description: 'Additional sermons and theological writings',
+      },
+    ],
+    keyExcerpts: [
+      {
+        work: 'Sinners in the Hands of an Angry God',
+        passage:
+          'There is nothing that keeps wicked men at any one moment out of hell, but the mere pleasure of God... The God that holds you over the pit of hell, much as one holds a spider, or some loathsome insect over the fire, abhors you.',
+        context: 'The famous revival sermon on divine judgment',
+      },
+      {
+        work: 'Religious Affections',
+        passage:
+          'True religion, in great part, consists in holy affections... The Author of human nature has not only given affections to men, but has made them very much the spring of actions.',
+        context: "Edwards' thesis on the centrality of affections",
+      },
+    ],
+    famousQuotes: [
+      'The happiness of the creature consists in rejoicing in God, by which also God is magnified and exalted.',
+      'Resolution One: I will live for God. Resolution Two: If no one else does, I still will.',
+      'Grace is but glory begun, and glory is but grace perfected.',
+      'Prayer is as natural an expression of faith as breathing is of life.',
+    ],
+    areasOfExpertise: [
+      'Reformed theology',
+      'revival',
+      'religious experience',
+      'philosophy',
+      'divine sovereignty',
+      'affections',
+    ],
+  },
+
+  charlesSpurgeon: {
+    id: 'charlesSpurgeon',
+    name: 'Charles Haddon Spurgeon',
+    era: '1834–1892',
+    tradition: 'Baptist / Reformed Christianity',
+    description:
+      'English Baptist preacher known as the "Prince of Preachers." His sermons and writings reached millions, and he remains one of the most widely read Christian authors. He combined Reformed theology with evangelistic fervor.',
+    keyTeachings: [
+      'The centrality of Christ and the cross in all preaching',
+      'Salvation by grace alone through faith alone',
+      'The importance of prayer in the Christian life',
+      'The Bible as the inspired and inerrant Word of God',
+      'The necessity of personal conversion',
+    ],
+    keyConcepts: [
+      {
+        name: 'Christ-Centered Preaching',
+        explanation:
+          'Every sermon should lead to Christ. "I take my text and make a beeline for the cross." All Scripture points to Jesus.',
+        relatedTerms: ['expository preaching', 'gospel', 'cross'],
+      },
+      {
+        name: 'Calvinistic Evangelism',
+        explanation:
+          "Spurgeon held both to God's sovereignty in election and the genuine offer of the gospel to all. Divine sovereignty motivates, not hinders, evangelism.",
+        relatedTerms: ['election', 'free offer', 'evangelism'],
+      },
+      {
+        name: 'Downgrade Controversy',
+        explanation:
+          "Spurgeon's warning against theological liberalism creeping into Baptist churches. He ultimately left the Baptist Union over doctrinal compromise.",
+        relatedTerms: ['liberalism', 'orthodoxy', 'separation'],
+      },
+    ],
+    notableWorks: [
+      'Lectures to My Students',
+      'The Treasury of David',
+      'Morning and Evening',
+      'All of Grace',
+      'Metropolitan Tabernacle Pulpit',
+    ],
+    textSources: [
+      {
+        id: 'spurgeon-lectures-students',
+        title: 'Lectures to My Students',
+        url: 'https://www.gutenberg.org/cache/epub/29199/pg29199.txt',
+        format: 'txt',
+        description: 'Practical wisdom for preachers and pastors',
+      },
+      {
+        id: 'spurgeon-all-of-grace',
+        title: 'All of Grace',
+        url: 'https://www.gutenberg.org/cache/epub/5657/pg5657.txt',
+        format: 'txt',
+        description: 'Evangelistic explanation of salvation by grace',
+      },
+      {
+        id: 'spurgeon-john-ploughman',
+        title: "John Ploughman's Talk",
+        url: 'https://www.gutenberg.org/cache/epub/15645/pg15645.txt',
+        format: 'txt',
+        description: 'Practical Christian wisdom in plain language',
+      },
+      {
+        id: 'spurgeon-treasury-david-vol1',
+        title: 'The Treasury of David, Vol. 1',
+        url: 'https://www.gutenberg.org/cache/epub/14420/pg14420.txt',
+        format: 'txt',
+        description: 'Comprehensive commentary on the Psalms',
+      },
+    ],
+    keyExcerpts: [
+      {
+        work: 'All of Grace',
+        passage:
+          'Grace is the opposite of merit... Merit is what we earn or deserve; grace is what God gives, not because we deserve it, but because He is gracious.',
+        context: 'Definition of grace for seekers',
+      },
+      {
+        work: 'Lectures to My Students',
+        passage: 'I take my text and make a beeline for the cross.',
+        context: "Spurgeon's homiletical principle",
+      },
+    ],
+    famousQuotes: [
+      'I have learned to kiss the wave that throws me against the Rock of Ages.',
+      "A Bible that's falling apart usually belongs to someone who isn't.",
+      'Visit many good books, but live in the Bible.',
+      'If you want truth to go round the world you must hire an express train to pull it; but if you want a lie to go round the world, it will fly.',
+      'By perseverance the snail reached the ark.',
+    ],
+    areasOfExpertise: [
+      'preaching',
+      'Reformed theology',
+      'evangelism',
+      'pastoral ministry',
+      'prayer',
+      'Psalms',
     ],
   },
 
@@ -1476,6 +2323,20 @@ export const PHILOSOPHERS: Record<string, Philosopher> = {
         format: 'txt',
         description: 'Vision for international peace',
       },
+      {
+        id: 'kant-critique-judgment',
+        title: 'The Critique of Judgement',
+        url: 'https://www.gutenberg.org/cache/epub/48433/pg48433.txt',
+        format: 'txt',
+        description: 'Third Critique on aesthetics and teleology',
+      },
+      {
+        id: 'kant-prolegomena',
+        title: 'Prolegomena to Any Future Metaphysics',
+        url: 'https://www.gutenberg.org/cache/epub/52821/pg52821.txt',
+        format: 'txt',
+        description: 'Accessible introduction to the Critique of Pure Reason',
+      },
     ],
     keyExcerpts: [
       {
@@ -1609,6 +2470,77 @@ export const PHILOSOPHERS: Record<string, Philosopher> = {
         format: 'txt',
         description: 'Joyful wisdom and the death of God',
       },
+      {
+        id: 'nietzsche-birth-tragedy',
+        title: 'The Birth of Tragedy',
+        url: 'https://www.gutenberg.org/cache/epub/7134/pg7134.txt',
+        format: 'txt',
+        description: 'Apollonian and Dionysian forces in art and culture',
+      },
+      {
+        id: 'nietzsche-ecce-homo',
+        title: 'Ecce Homo',
+        url: 'https://www.gutenberg.org/cache/epub/52190/pg52190.txt',
+        format: 'txt',
+        description:
+          'Nietzsche\'s autobiography: "How One Becomes What One Is"',
+      },
+      {
+        id: 'nietzsche-antichrist',
+        title: 'The Antichrist',
+        url: 'https://www.gutenberg.org/cache/epub/19322/pg19322.txt',
+        format: 'txt',
+        description: 'Critique of Christianity',
+      },
+      {
+        id: 'nietzsche-human-all-too-human',
+        title: 'Human, All Too Human',
+        url: 'https://www.gutenberg.org/cache/epub/38145/pg38145.txt',
+        format: 'txt',
+        description: 'Aphoristic critique of metaphysics and morality',
+      },
+      {
+        id: 'nietzsche-will-to-power-1-2',
+        title: 'The Will to Power, Books I and II',
+        url: 'https://www.gutenberg.org/cache/epub/52914/pg52914.txt',
+        format: 'txt',
+        description: 'Posthumous collection of notes on power and values',
+      },
+      {
+        id: 'nietzsche-will-to-power-3-4',
+        title: 'The Will to Power, Books III and IV',
+        url: 'https://www.gutenberg.org/cache/epub/52915/pg52915.txt',
+        format: 'txt',
+        description: 'Continuation on the will to power and eternal recurrence',
+      },
+      {
+        id: 'nietzsche-dawn-of-day',
+        title: 'The Dawn of Day',
+        url: 'https://www.gutenberg.org/cache/epub/39955/pg39955.txt',
+        format: 'txt',
+        description: 'Thoughts on morality as prejudice',
+      },
+      {
+        id: 'nietzsche-case-of-wagner',
+        title: 'The Case of Wagner',
+        url: 'https://www.gutenberg.org/cache/epub/25012/pg25012.txt',
+        format: 'txt',
+        description: 'Critique of Wagner and modern music',
+      },
+      {
+        id: 'nietzsche-thoughts-out-of-season',
+        title: 'Thoughts Out of Season, Part II',
+        url: 'https://www.gutenberg.org/cache/epub/38226/pg38226.txt',
+        format: 'txt',
+        description: 'Essays on history and the utility of knowledge',
+      },
+      {
+        id: 'nietzsche-early-greek-philosophy',
+        title: 'Early Greek Philosophy and Other Essays',
+        url: 'https://www.gutenberg.org/cache/epub/5639/pg5639.txt',
+        format: 'txt',
+        description: 'Essays on pre-Socratic philosophers',
+      },
     ],
     keyExcerpts: [
       {
@@ -1708,6 +2640,20 @@ export const PHILOSOPHERS: Record<string, Philosopher> = {
         url: 'https://www.gutenberg.org/cache/epub/45631/pg45631.txt',
         format: 'txt',
         description: 'Meditation on Abraham and the leap of faith',
+      },
+      {
+        id: 'kierkegaard-sickness-unto-death',
+        title: 'The Sickness Unto Death',
+        url: 'https://www.gutenberg.org/cache/epub/27618/pg27618.txt',
+        format: 'txt',
+        description: 'Analysis of despair as the failure to be oneself',
+      },
+      {
+        id: 'kierkegaard-present-age',
+        title: 'The Present Age',
+        url: 'https://www.gutenberg.org/cache/epub/57944/pg57944.txt',
+        format: 'txt',
+        description: 'Critique of modernity and the loss of passion',
       },
     ],
     keyExcerpts: [
