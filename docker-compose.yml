@@ -1,0 +1,73 @@
+# Philosophizer - Docker Compose Configuration
+# 
+# Usage:
+#   docker compose up -d           # Start all services
+#   docker compose up -d --build   # Rebuild and start
+#   docker compose down            # Stop all services
+#   docker compose logs -f         # View logs
+#
+# For production with pre-existing ChromaDB data:
+#   1. Copy your chroma-backup.tar.gz to the project root
+#   2. Run: ./scripts/restore-chroma.sh
+#   3. Run: docker compose up -d
+
+services:
+  # ==========================================================================
+  # ChromaDB Vector Database
+  # ==========================================================================
+  chroma:
+    image: chromadb/chroma:latest
+    container_name: philosophizer-chroma
+    restart: unless-stopped
+    ports:
+      - "${CHROMA_PORT:-8000}:8000"
+    volumes:
+      - chroma-data:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ANONYMIZED_TELEMETRY=FALSE
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ==========================================================================
+  # Philosophizer Application
+  # ==========================================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: philosophizer-app
+    restart: unless-stopped
+    ports:
+      - "${PORT:-1738}:1738"
+    environment:
+      - NODE_ENV=production
+      - PORT=1738
+      # ChromaDB connection (internal Docker network)
+      - CHROMA_URL=http://chroma:8000
+      # Embedding service - configure based on your provider
+      - EMBEDDING_BASE_URL=${EMBEDDING_BASE_URL:-http://host.docker.internal:1234/v1}
+      - EMBEDDING_API_KEY=${EMBEDDING_API_KEY:-lm-studio}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-text-embedding-nomic-embed-text-v1.5-embedding}
+      # LLM provider settings
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    depends_on:
+      chroma:
+        condition: service_healthy
+    extra_hosts:
+      # Allow container to access host machine services (for local LM Studio)
+      - "host.docker.internal:host-gateway"
+
+# ==========================================================================
+# Persistent Volumes
+# ==========================================================================
+volumes:
+  chroma-data:
+    name: philosophizer-chroma-data
+

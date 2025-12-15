@@ -8,32 +8,17 @@
 
 import { ChromaClient, type Collection } from 'chromadb';
 import { embed, embedMany } from 'ai';
-import { createOpenAI } from '@ai-sdk/openai';
 import type { TextChunk } from './chunker';
 import {
+  CHROMA_URL,
   COLLECTION_NAME,
   DEFAULT_QUERY_LIMIT,
   MIN_RELEVANCE_SCORE,
   ADJACENT_CHUNK_WINDOW,
   EMBEDDING_BATCH_SIZE,
 } from '../../constants/rag';
-
-// LM Studio configuration (OpenAI-compatible API)
-const EMBEDDING_BASE_URL =
-  process.env.EMBEDDING_BASE_URL || 'http://localhost:1234/v1';
-const EMBEDDING_API_KEY = process.env.EMBEDDING_API_KEY || 'lm-studio';
-const EMBEDDING_MODEL_NAME =
-  process.env.EMBEDDING_MODEL ||
-  'text-embedding-nomic-embed-text-v1.5-embedding';
-
-// Create embedding provider pointing to LM Studio
-const embeddingProvider = createOpenAI({
-  baseURL: EMBEDDING_BASE_URL,
-  apiKey: EMBEDDING_API_KEY,
-});
-
-// Embedding model to use
-const EMBEDDING_MODEL = embeddingProvider.embedding(EMBEDDING_MODEL_NAME);
+import { EMBEDDING_MODEL_NAME } from '../../constants/providers';
+import { EMBEDDING_MODEL } from '../../utils/providers';
 
 // Singleton instances
 let chromaClient: ChromaClient | null = null;
@@ -82,8 +67,8 @@ export async function initVectorStore(): Promise<{
     return { client: chromaClient, collection };
   }
 
-  // Initialize ChromaDB client (connects to localhost:8000 by default)
-  chromaClient = new ChromaClient();
+  // Initialize ChromaDB client with configurable URL
+  chromaClient = new ChromaClient({ path: CHROMA_URL });
 
   // Get or create the collection with cosine similarity (better for text)
   collection = await chromaClient.getOrCreateCollection({

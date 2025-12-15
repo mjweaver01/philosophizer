@@ -5,8 +5,11 @@
  */
 
 // ============================================================================
-// COLLECTION SETTINGS
+// CHROMADB CONNECTION
 // ============================================================================
+
+/** ChromaDB server URL */
+export const CHROMA_URL = process.env.CHROMA_URL || 'http://localhost:8000';
 
 /** Name of the ChromaDB collection for philosopher texts */
 export const COLLECTION_NAME = 'philosopher_texts';
