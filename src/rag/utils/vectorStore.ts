@@ -86,11 +86,10 @@ export async function initVectorStore(): Promise<{
     name: COLLECTION_NAME,
     metadata: {
       description: 'Philosopher and theologian primary source texts',
-      embeddingModel: 'text-embedding-3-small',
+      embeddingModel: EMBEDDING_MODEL_NAME,
     },
   });
 
-  console.log(`✓ Vector store initialized: ${COLLECTION_NAME}`);
   return { client: chromaClient, collection };
 }
 
