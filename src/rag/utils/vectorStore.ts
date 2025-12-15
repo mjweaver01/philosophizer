@@ -10,9 +10,13 @@ import { ChromaClient, type Collection } from 'chromadb';
 import { embed, embedMany } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import type { TextChunk } from './chunker';
-
-// Collection name for philosopher texts
-const COLLECTION_NAME = 'philosopher_texts';
+import {
+  COLLECTION_NAME,
+  DEFAULT_QUERY_LIMIT,
+  MIN_RELEVANCE_SCORE,
+  ADJACENT_CHUNK_WINDOW,
+  EMBEDDING_BATCH_SIZE,
+} from '../../constants/rag';
 
 // LM Studio configuration (OpenAI-compatible API)
 const EMBEDDING_BASE_URL =
@@ -81,12 +85,13 @@ export async function initVectorStore(): Promise<{
   // Initialize ChromaDB client (connects to localhost:8000 by default)
   chromaClient = new ChromaClient();
 
-  // Get or create the collection
+  // Get or create the collection with cosine similarity (better for text)
   collection = await chromaClient.getOrCreateCollection({
     name: COLLECTION_NAME,
     metadata: {
       description: 'Philosopher and theologian primary source texts',
       embeddingModel: EMBEDDING_MODEL_NAME,
+      'hnsw:space': 'cosine', // Use cosine similarity instead of L2 distance
     },
   });
 
@@ -102,10 +107,9 @@ export async function addChunks(chunks: TextChunk[]): Promise<number> {
   const { collection } = await initVectorStore();
 
   let added = 0;
-  const batchSize = 50;
 
-  for (let i = 0; i < chunks.length; i += batchSize) {
-    const batch = chunks.slice(i, i + batchSize);
+  for (let i = 0; i < chunks.length; i += EMBEDDING_BATCH_SIZE) {
+    const batch = chunks.slice(i, i + EMBEDDING_BATCH_SIZE);
 
     const batchIds = batch.map(c => c.id);
     const batchDocs = batch.map(c => c.content);
@@ -130,9 +134,9 @@ export async function addChunks(chunks: TextChunk[]): Promise<number> {
 
     added += batch.length;
 
-    if (chunks.length > batchSize) {
+    if (chunks.length > EMBEDDING_BATCH_SIZE) {
       console.log(
-        `  Embedded ${Math.min(i + batchSize, chunks.length)}/${chunks.length} chunks`
+        `  Embedded ${Math.min(i + EMBEDDING_BATCH_SIZE, chunks.length)}/${chunks.length} chunks`
       );
     }
   }
@@ -164,7 +168,12 @@ export async function queryPassages(
   query: string,
   options: QueryOptions = {}
 ): Promise<QueryResult[]> {
-  const { philosopher, sourceId, limit = 10, minScore = 0.3 } = options;
+  const {
+    philosopher,
+    sourceId,
+    limit = DEFAULT_QUERY_LIMIT,
+    minScore = MIN_RELEVANCE_SCORE,
+  } = options;
 
   const { collection } = await initVectorStore();
 
@@ -189,8 +198,9 @@ export async function queryPassages(
   if (results.ids[0]) {
     for (let i = 0; i < results.ids[0].length; i++) {
       const distance = results.distances?.[0]?.[i] ?? 1;
-      // Convert distance to similarity score (ChromaDB uses L2 distance by default)
-      const score = 1 / (1 + distance);
+      // For cosine similarity: distance is 1 - similarity, so similarity = 1 - distance
+      // Score ranges from 0 (completely different) to 1 (identical)
+      const score = Math.max(0, 1 - distance);
 
       if (score >= minScore) {
         const metadata = results.metadatas?.[0]?.[i] as Record<string, unknown>;
@@ -226,7 +236,102 @@ export async function queryMultiplePhilosophers(
   }
 
   allResults.sort((a, b) => b.relevanceScore - a.relevanceScore);
-  return allResults.slice(0, options.limit || 10);
+  return allResults.slice(0, options.limit || DEFAULT_QUERY_LIMIT);
+}
+
+/**
+ * Get adjacent chunks for expanded context around a matched passage
+ * Returns chunks before and after the given chunk index
+ */
+export async function getAdjacentChunks(
+  sourceId: string,
+  chunkIndex: number,
+  window: number = ADJACENT_CHUNK_WINDOW
+): Promise<QueryResult[]> {
+  const { collection } = await initVectorStore();
+
+  // Calculate which chunk indices to fetch
+  const targetIndices: number[] = [];
+  for (let i = chunkIndex - window; i <= chunkIndex + window; i++) {
+    if (i >= 0 && i !== chunkIndex) {
+      targetIndices.push(i);
+    }
+  }
+
+  if (targetIndices.length === 0) {
+    return [];
+  }
+
+  const results: QueryResult[] = [];
+
+  // Fetch each adjacent chunk
+  for (const idx of targetIndices) {
+    const chunkResults = await collection.get({
+      where: {
+        $and: [{ sourceId: { $eq: sourceId } }, { chunkIndex: { $eq: idx } }],
+      },
+      limit: 1,
+    });
+
+    if (chunkResults.ids.length > 0) {
+      const metadata = chunkResults.metadatas?.[0] as Record<string, unknown>;
+      results.push({
+        id: chunkResults.ids[0]!,
+        content: chunkResults.documents?.[0] ?? '',
+        philosopher: (metadata?.philosopher as string) ?? '',
+        sourceId: (metadata?.sourceId as string) ?? '',
+        title: (metadata?.title as string) ?? '',
+        chunkIndex: (metadata?.chunkIndex as number) ?? 0,
+        relevanceScore: 1, // Adjacent chunks have full relevance to context
+      });
+    }
+  }
+
+  // Sort by chunk index for proper reading order
+  results.sort((a, b) => a.chunkIndex - b.chunkIndex);
+
+  return results;
+}
+
+/**
+ * Get a passage with surrounding context (the matched chunk plus adjacent chunks)
+ */
+export async function getPassageWithContext(
+  sourceId: string,
+  chunkIndex: number,
+  contextWindow: number = ADJACENT_CHUNK_WINDOW
+): Promise<{ main: QueryResult | null; context: QueryResult[] }> {
+  const { collection } = await initVectorStore();
+
+  // Get the main chunk
+  const mainResult = await collection.get({
+    where: {
+      $and: [
+        { sourceId: { $eq: sourceId } },
+        { chunkIndex: { $eq: chunkIndex } },
+      ],
+    },
+    limit: 1,
+  });
+
+  let main: QueryResult | null = null;
+  if (mainResult.ids.length > 0) {
+    const metadata = mainResult.metadatas?.[0] as Record<string, unknown>;
+    main = {
+      id: mainResult.ids[0]!,
+      content: mainResult.documents?.[0] ?? '',
+      philosopher: (metadata?.philosopher as string) ?? '',
+      sourceId: (metadata?.sourceId as string) ?? '',
+      title: (metadata?.title as string) ?? '',
+      chunkIndex: (metadata?.chunkIndex as number) ?? 0,
+      relevanceScore: 1,
+    };
+  }
+
+  // Get adjacent chunks for context
+  const context = await getAdjacentChunks(sourceId, chunkIndex, contextWindow);
+
+  return { main, context };
 }
 
 /**

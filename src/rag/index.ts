@@ -17,6 +17,16 @@
  *   const allResults = await queryAllPhilosophers('What is the meaning of life?');
  */
 
+import {
+  queryPassages,
+  getCollectionStats,
+  type QueryResult,
+} from './utils/vectorStore';
+
+// ============================================================================
+// RE-EXPORTS
+// ============================================================================
+
 export {
   TEXT_SOURCES,
   getSourcesByPhilosopher,
@@ -30,6 +40,8 @@ export {
   formatResults,
   getCollectionStats,
   isSourceIndexed,
+  getAdjacentChunks,
+  getPassageWithContext,
 } from './utils/vectorStore';
 export type { QueryResult } from './utils/vectorStore';
 
@@ -40,6 +52,10 @@ export {
 } from './utils/chunker';
 export type { TextChunk, ChunkOptions } from './utils/chunker';
 
+// ============================================================================
+// CONVENIENCE FUNCTIONS
+// ============================================================================
+
 /**
  * Query a specific philosopher's texts for relevant passages
  */
@@ -47,8 +63,7 @@ export async function queryPhilosopher(
   philosopher: string,
   topic: string,
   limit: number = 5
-): Promise<import('./utils/vectorStore').QueryResult[]> {
-  const { queryPassages } = await import('./utils/vectorStore');
+): Promise<QueryResult[]> {
   return queryPassages(topic, { philosopher, limit });
 }
 
@@ -58,8 +73,7 @@ export async function queryPhilosopher(
 export async function queryAllPhilosophers(
   topic: string,
   limit: number = 5
-): Promise<import('./utils/vectorStore').QueryResult[]> {
-  const { queryPassages } = await import('./utils/vectorStore');
+): Promise<QueryResult[]> {
   return queryPassages(topic, { limit });
 }
 
@@ -68,7 +82,6 @@ export async function queryAllPhilosophers(
  */
 export async function isRAGInitialized(): Promise<boolean> {
   try {
-    const { getCollectionStats } = await import('./utils/vectorStore');
     const stats = await getCollectionStats();
     return stats.totalChunks > 0;
   } catch {

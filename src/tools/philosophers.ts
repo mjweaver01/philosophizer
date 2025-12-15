@@ -8,40 +8,84 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { PHILOSOPHERS, type Philosopher } from '../constants/philosophers';
+import {
+  PHILOSOPHER_QUERY_LIMIT,
+  CONTEXT_EXPANSION_THRESHOLD,
+  ADJACENT_CHUNK_WINDOW,
+  CONTEXT_PREVIEW_LENGTH,
+} from '../constants/rag';
+import { queryPhilosopher, isRAGInitialized, getAdjacentChunks } from '../rag';
 
 // ============================================================================
 // RAG INTEGRATION
 // ============================================================================
 
 /**
- * Query the RAG system for relevant passages (dynamic import to avoid circular deps)
+ * Query the RAG system for relevant passages with expanded context
+ * Uses query augmentation and adjacent chunk retrieval for better results
  */
 async function queryRAG(
   philosopherKey: string,
   topic: string
 ): Promise<{ found: boolean; passages: string }> {
   try {
-    const { queryPhilosopher, isRAGInitialized } = await import('../rag');
-
     // Check if RAG is initialized
     if (!(await isRAGInitialized())) {
       return { found: false, passages: '' };
     }
 
     // Query for relevant passages
-    const results = await queryPhilosopher(philosopherKey, topic, 5);
+    const results = await queryPhilosopher(philosopherKey, topic, PHILOSOPHER_QUERY_LIMIT);
 
     if (results.length === 0) {
       return { found: false, passages: '' };
     }
 
-    // Format the results
-    let passages = `\n### 📚 Relevant Passages from Primary Sources (on "${topic}")\n`;
-    passages += `*Found ${results.length} relevant passages via semantic search*\n`;
+    // Format the results with expanded context for high-relevance matches
+    let passages = `\n### 📚 Relevant Passages from Primary Sources\n`;
+    passages += `*Query: "${topic}" — Found ${results.length} relevant passages*\n`;
 
     for (const result of results) {
-      passages += `\n**From "${result.title}"** *(relevance: ${(result.relevanceScore * 100).toFixed(0)}%)*\n`;
-      passages += `> ${result.content}\n`;
+      const relevancePercent = (result.relevanceScore * 100).toFixed(0);
+      passages += `\n**From "${result.title}"** *(${relevancePercent}% match)*\n`;
+
+      // For high-relevance results, fetch surrounding context
+      if (result.relevanceScore > CONTEXT_EXPANSION_THRESHOLD) {
+        try {
+          const adjacentChunks = await getAdjacentChunks(
+            result.sourceId,
+            result.chunkIndex,
+            ADJACENT_CHUNK_WINDOW
+          );
+
+          // Find preceding and following context
+          const preceding = adjacentChunks.find(
+            c => c.chunkIndex === result.chunkIndex - 1
+          );
+          const following = adjacentChunks.find(
+            c => c.chunkIndex === result.chunkIndex + 1
+          );
+
+          if (preceding) {
+            // Show last N chars of preceding context
+            const previewText = preceding.content.slice(-CONTEXT_PREVIEW_LENGTH).trim();
+            passages += `> [...] ${previewText}\n>\n`;
+          }
+
+          passages += `> ${result.content}\n`;
+
+          if (following) {
+            // Show first N chars of following context
+            const previewText = following.content.slice(0, CONTEXT_PREVIEW_LENGTH).trim();
+            passages += `>\n> ${previewText} [...]\n`;
+          }
+        } catch {
+          // Fall back to just the main passage
+          passages += `> ${result.content}\n`;
+        }
+      } else {
+        passages += `> ${result.content}\n`;
+      }
     }
 
     return { found: true, passages };
