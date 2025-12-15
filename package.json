@@ -1,0 +1,48 @@
+{
+  "name": "philosophizer",
+  "module": "src/index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "dev:debug": "bun --inspect --watch src/index.ts",
+    "start": "bun src/index.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "chroma": "docker run -d --name chroma -p 8000:8000 -v chroma-data:/chroma/chroma chromadb/chroma",
+    "chroma:stop": "docker stop chroma && docker rm chroma",
+    "rag:index": "bun run src/rag/scripts/indexTexts.ts",
+    "rag:query": "bun run src/rag/scripts/queryTest.ts",
+    "rag:stats": "bun run src/rag/scripts/indexTexts.ts --stats",
+    "rag:clear": "bun run src/rag/scripts/indexTexts.ts --clear"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@types/uuid": "^10.0.0",
+    "prettier": "^3.6.2"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "^3.0.0-beta.54",
+    "@ai-sdk/react": "^3.0.0-beta.93",
+    "@chroma-core/default-embed": "^0.1.9",
+    "ai": "^6.0.0-beta.93",
+    "bun-plugin-tailwind": "^0.1.2",
+    "chromadb": "^3.1.8",
+    "dotenv": "^16.4.7",
+    "katex": "^0.16.25",
+    "marked": "^16.4.1",
+    "marked-katex-extension": "^5.1.5",
+    "marked-react": "^3.0.2",
+    "playwright": "^1.49.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "tailwindcss": "^4.1.16",
+    "uuid": "^11.0.5",
+    "zod": "^3.24.1"
+  }
+}

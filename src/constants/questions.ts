@@ -1,0 +1,15 @@
+export const STARTER_QUESTIONS = [
+  'What did Martin Luther say about free will?',
+  'What is the meaning of life?',
+  'How do I deal with anxiety about things I cannot control?',
+  'Is it ever okay to lie to protect someone?',
+  'What did the Stoics teach about facing death?',
+  'How do I become a better person?',
+  'What is true love according to the philosophers?',
+  'Why do bad things happen to good people?',
+  'How do I find meaning after losing my faith?',
+  'What makes an action morally right or wrong?',
+  'How should I treat others according to Confucius?',
+  'What did Buddha teach about suffering?',
+  'Does God exist? What are the arguments?',
+];
