@@ -262,6 +262,29 @@ export function ChatInterface() {
     );
   };
 
+  const AboutButton = () => (
+    <a
+      href="/about"
+      className="flex items-center justify-center p-2 bg-surface border border-border hover:bg-surface-secondary text-text-muted hover:text-text rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary"
+      title="About - View indexed philosophers"
+    >
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="16" x2="12" y2="12" />
+        <line x1="12" y1="8" x2="12.01" y2="8" />
+      </svg>
+    </a>
+  );
+
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
@@ -280,12 +303,13 @@ export function ChatInterface() {
       <div className="flex flex-col flex-1 min-w-0">
         {/* Header */}
         <div className="border-b border-border bg-surface">
-          <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <MenuButton />
             </div>
             <div className="flex items-center gap-3">
               {messages.length > 0 && <Clear />}
+              <AboutButton />
               <ThemeToggle />
             </div>
           </div>

@@ -2,6 +2,10 @@ import indexPageHtml from './frontend/index.html';
 import { agent } from './endpoints/agent';
 import { rag } from './endpoints/rag';
 import { conversations, conversation } from './endpoints/conversations';
+import {
+  philosophersEndpoint,
+  philosopherDetailEndpoint,
+} from './endpoints/philosophers';
 import { initializeAgent } from './utils/agent';
 
 console.log(
@@ -14,10 +18,15 @@ const server = Bun.serve({
   port: process.env.PORT ?? 1738,
   idleTimeout: 120,
   routes: {
+    // Frontend routes
     '/': indexPageHtml,
-    '/c/:id': indexPageHtml, // Client-side routing for conversations
+    '/about': indexPageHtml,
+    '/c/:id': indexPageHtml,
+    // API routes
     '/agent': agent,
     '/rag': rag,
+    '/api/philosophers': philosophersEndpoint,
+    '/api/philosophers/:id': philosopherDetailEndpoint,
     '/conversations': conversations,
     '/conversations/:id': conversation,
   },
