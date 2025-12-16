@@ -1,5 +1,5 @@
 # Philosophizer - Docker Compose Configuration
-# 
+#
 # Usage:
 #   docker compose up -d           # Start all services
 #   docker compose up -d --build   # Rebuild and start
@@ -20,14 +20,14 @@ services:
     container_name: philosophizer-chroma
     restart: unless-stopped
     ports:
-      - "${CHROMA_PORT:-8000}:8000"
+      - '${CHROMA_PORT:-8000}:8000'
     volumes:
       - chroma-data:/chroma/chroma
     environment:
       - IS_PERSISTENT=TRUE
       - ANONYMIZED_TELEMETRY=FALSE
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:8000/api/v1/heartbeat']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -43,26 +43,29 @@ services:
     container_name: philosophizer-app
     restart: unless-stopped
     ports:
-      - "${PORT:-1738}:1738"
+      - '${PORT:-1738}:1738'
     environment:
       - NODE_ENV=production
       - PORT=1738
       # ChromaDB connection (internal Docker network)
       - CHROMA_URL=http://chroma:8000
-      # Embedding service - configure based on your provider
-      - EMBEDDING_BASE_URL=${EMBEDDING_BASE_URL:-http://host.docker.internal:1234/v1}
-      - EMBEDDING_API_KEY=${EMBEDDING_API_KEY:-lm-studio}
-      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-text-embedding-nomic-embed-text-v1.5-embedding}
-      # LLM provider settings
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      # LLM (chat) provider configuration
+      - AI_BASE_URL=${AI_BASE_URL:-https://api.openai.com/v1}
+      - LLM_MODEL=${LLM_MODEL:-gpt-5.2}
+      # Accept either AI_API_KEY or OPENAI_API_KEY (code falls back automatically)
+      - AI_API_KEY=${AI_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - SEARCH_MODEL=${SEARCH_MODEL:-gpt-4.1-mini}
+      # Embedding service - configure based on your provider
+      - EMBEDDING_BASE_URL=${EMBEDDING_BASE_URL:-https://api.openai.com/v1}
+      - EMBEDDING_API_KEY=${EMBEDDING_API_KEY}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-text-embedding-nomic-embed-text-v1.5-embedding}
     depends_on:
       chroma:
         condition: service_healthy
     extra_hosts:
       # Allow container to access host machine services (for local LM Studio)
-      - "host.docker.internal:host-gateway"
+      - 'host.docker.internal:host-gateway'
 
 # ==========================================================================
 # Persistent Volumes
@@ -70,4 +73,3 @@ services:
 volumes:
   chroma-data:
     name: philosophizer-chroma-data
-
