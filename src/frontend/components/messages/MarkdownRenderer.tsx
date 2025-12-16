@@ -2,7 +2,7 @@ import React from 'react';
 import Markdown from 'marked-react';
 
 // Custom renderer components for better spacing and styling
-const renderer = {
+const defaultRenderer = {
   paragraph(children: React.ReactNode) {
     return <p className="my-4 leading-7">{children}</p>;
   },
@@ -95,15 +95,76 @@ const renderer = {
   },
 };
 
+// More compact spacing/typography (useful for tool output panels, etc.)
+const compactRenderer = {
+  ...defaultRenderer,
+  paragraph(children: React.ReactNode) {
+    return <p className="my-2 leading-6">{children}</p>;
+  },
+  heading(children: React.ReactNode, level: number) {
+    const levelStyles = {
+      1: 'text-base mt-3 mb-2',
+      2: 'text-sm mt-3 mb-2',
+      3: 'text-sm mt-2 mb-1',
+      4: 'text-xs mt-2 mb-1',
+      5: 'text-xs mt-2 mb-1',
+      6: 'text-xs mt-2 mb-1',
+    };
+
+    const className = `font-semibold tracking-tight ${levelStyles[level as keyof typeof levelStyles]}`;
+
+    switch (level) {
+      case 1:
+        return <h1 className={className}>{children}</h1>;
+      case 2:
+        return <h2 className={className}>{children}</h2>;
+      case 3:
+        return <h3 className={className}>{children}</h3>;
+      case 4:
+        return <h4 className={className}>{children}</h4>;
+      case 5:
+        return <h5 className={className}>{children}</h5>;
+      case 6:
+        return <h6 className={className}>{children}</h6>;
+      default:
+        return <h1 className={className}>{children}</h1>;
+    }
+  },
+  list(children: React.ReactNode, ordered: boolean) {
+    return ordered ? (
+      <ol className="my-2 space-y-1 list-decimal list-inside">{children}</ol>
+    ) : (
+      <ul className="my-2 space-y-1 list-disc list-inside">{children}</ul>
+    );
+  },
+  blockquote(children: React.ReactNode) {
+    return (
+      <blockquote className="my-3 border-l-4 border-border pl-3 italic text-text-secondary">
+        {children}
+      </blockquote>
+    );
+  },
+  code(code: string) {
+    return (
+      <pre className="my-2 bg-surface-secondary text-text p-3 rounded-lg overflow-x-auto">
+        <code>{code}</code>
+      </pre>
+    );
+  },
+};
+
 interface MarkdownRendererProps {
   content: string;
   className?: string;
+  variant?: 'default' | 'compact';
 }
 
 export function MarkdownRenderer({
   content,
   className = 'text-text',
+  variant = 'default',
 }: MarkdownRendererProps) {
+  const renderer = variant === 'compact' ? compactRenderer : defaultRenderer;
   return (
     <div className={`${className} [&>*:first-child]:mt-0`}>
       <Markdown value={content} renderer={renderer} breaks gfm />

@@ -78,3 +78,47 @@ export function isToolCallPart(partType: string): boolean {
     partType === 'tool-execution'
   );
 }
+
+/**
+ * Format tool name for display
+ */
+export function formatToolName(toolName: string): string {
+  if (!toolName) return '';
+
+  const spaced = toolName
+    // Handle namespaced tool names like "tools.webSearch" or "tools:webSearch"
+    .replace(/[.:/]+/g, ' ')
+    // Handle snake_case / kebab-case
+    .replace(/[_-]+/g, ' ')
+    // Handle camelCase / digitCase
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    // Handle acronym boundaries like "RAGSearch" -> "RAG Search"
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return spaced
+    .split(' ')
+    .filter(Boolean)
+    .map(word => {
+      const isAllCaps = word.length > 1 && word === word.toUpperCase();
+      if (isAllCaps) return word;
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join(' ');
+}
+
+/**
+ * Check if a string looks like a JSON string
+ */
+export function isLikelyJSONString(value: string): boolean {
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+  if (!(trimmed.startsWith('{') || trimmed.startsWith('['))) return false;
+  try {
+    JSON.parse(trimmed);
+    return true;
+  } catch {
+    return false;
+  }
+}

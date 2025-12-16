@@ -786,7 +786,7 @@ export const christianPhilosophers = {
       {
         id: 'melanchthon-loci-communes',
         title: 'Loci Communes (Common Places)',
-        url: 'https://archive.org/download/locicommunesofph0000mela/locicommunesofph0000mela_djvu.txt',
+        url: 'https://dn710300.ca.archive.org/0/items/bub_gb_y7M_AAAAYAAJ/bub_gb_y7M_AAAAYAAJ_djvu.txt',
         format: 'txt',
         description: 'First systematic theology of the Reformation',
       },

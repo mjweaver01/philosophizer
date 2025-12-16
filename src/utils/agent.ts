@@ -11,10 +11,6 @@ function createAgent(provider: ReturnType<typeof createProvider>) {
     model: provider.chat(LLM_MODEL),
     instructions: SYSTEM_PROMPT,
     tools,
-    toolChoice: 'auto',
-    // Safety limit to prevent runaway loops
-    // Most queries need 1-3 tool calls, but complex multi-domain questions may need more
-    stopWhen: stepCountIs(10),
   });
 }
 

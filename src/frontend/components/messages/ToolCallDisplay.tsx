@@ -1,3 +1,9 @@
+import { MarkdownRenderer } from './MarkdownRenderer';
+import {
+  formatToolName,
+  isLikelyJSONString,
+} from '../../../utils/textProcessing';
+
 interface ToolCallDisplayProps {
   toolName: string;
   isCompleted: boolean;
@@ -13,6 +19,7 @@ export function ToolCallDisplay({
   input,
   output,
 }: ToolCallDisplayProps) {
+  const displayToolName = formatToolName(toolName);
   const containerClass = hasError
     ? 'bg-error-bg border border-error-border'
     : isCompleted
@@ -36,6 +43,12 @@ export function ToolCallDisplay({
     : isCompleted
       ? 'Tool completed'
       : 'Calling tool';
+
+  const hasOutput =
+    output !== undefined &&
+    output !== null &&
+    !(typeof output === 'string' && output.trim() === '') &&
+    !(typeof output === 'string' && output.trim() === 'undefined');
 
   return (
     <details
@@ -107,14 +120,14 @@ export function ToolCallDisplay({
             </svg>
           )}
           <span className={`font-medium ${textColorClass}`}>
-            {statusText}: {toolName}
+            {statusText}: {displayToolName}
           </span>
         </div>
       </summary>
 
       <div className="px-4 pb-3 border-t border-border pt-3">
         {/* Input parameters */}
-        {input && (
+        {input !== undefined && input !== null && (
           <div className="mb-3">
             <div className="text-xs text-text-muted mb-1">Input:</div>
             <div
@@ -128,16 +141,28 @@ export function ToolCallDisplay({
         )}
 
         {/* Output/Result */}
-        {output && output !== 'undefined ' && (
+        {hasOutput && (
           <div>
             <div className="text-xs text-text-muted mb-1">Output:</div>
-            <div
-              className={`text-xs font-mono px-2 py-1 rounded overflow-x-auto max-h-48 overflow-y-auto ${textColorClass} ${containerClass}`}
-            >
-              {typeof output === 'string'
-                ? output
-                : JSON.stringify(output, null, 2)}
-            </div>
+            {typeof output === 'string' && !isLikelyJSONString(output) ? (
+              <div
+                className={`text-xs px-2 py-2 rounded overflow-x-auto max-h-48 overflow-y-auto ${containerClass}`}
+              >
+                <MarkdownRenderer
+                  content={output}
+                  variant="compact"
+                  className={`${textColorClass} text-xs`}
+                />
+              </div>
+            ) : (
+              <pre
+                className={`text-xs font-mono px-2 py-2 rounded overflow-x-auto max-h-48 overflow-y-auto ${textColorClass} ${containerClass}`}
+              >
+                {typeof output === 'string'
+                  ? output
+                  : JSON.stringify(output, null, 2)}
+              </pre>
+            )}
           </div>
         )}
       </div>

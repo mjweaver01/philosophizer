@@ -93,7 +93,7 @@ export const greekPhilosophers = {
       {
         id: 'aristotle-organon',
         title: 'The Organon (Logic)',
-        url: 'https://en.wikisource.org/wiki/https://dn790001.ca.archive.org/0/items/organonorlogica00porpgoog/organonorlogica00porpgoog_djvu.txt',
+        url: 'https://dn790001.ca.archive.org/0/items/organonorlogica00porpgoog/organonorlogica00porpgoog_djvu.txt',
         format: 'txt',
         description: "Aristotle's works on logic",
       },
