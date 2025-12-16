@@ -50,7 +50,7 @@ export function ChatInput({
         <button
           type="submit"
           disabled={isProcessing || !input.trim()}
-          className="cursor-pointer absolute right-2 p-2 text-text-muted hover:text-text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          className="cursor-pointer absolute right-2 bottom-[6px] p-2 text-text-muted hover:text-text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         >
           <svg
             width="20"
