@@ -123,14 +123,14 @@ export const stoicPhilosophers = {
       {
         id: 'epictetus-discourses',
         title: 'Discourses and Enchiridion',
-        url: 'https://www.gutenberg.org/cache/epub/45109/pg45109.txt',
+        url: 'https://www.gutenberg.org/ebooks/10661.txt.utf-8',
         format: 'txt',
         description: 'Stoic teachings on living a good life',
       },
       {
         id: 'epictetus-enchiridion',
         title: 'Enchiridion (The Manual)',
-        url: 'https://www.gutenberg.org/cache/epub/45139/pg45139.txt',
+        url: 'https://www.gutenberg.org/ebooks/45109.txt.utf-8',
         format: 'txt',
         description: 'Condensed handbook of Stoic principles',
       },
@@ -210,14 +210,14 @@ export const stoicPhilosophers = {
       {
         id: 'seneca-letters',
         title: 'Letters from a Stoic',
-        url: 'https://www.gutenberg.org/cache/epub/64488/pg64488.txt',
+        url: 'https://ia801500.us.archive.org/10/items/in.ernet.dli.2015.65471/2015.65471.Letters-From-A-Stoic_djvu.txt',
         format: 'txt',
         description: 'Moral letters on Stoic wisdom',
       },
       {
         id: 'seneca-shortness-life',
         title: 'On the Shortness of Life',
-        url: 'https://www.gutenberg.org/cache/epub/67672/pg67672.txt',
+        url: 'https://www.gutenberg.org/ebooks/64576.txt.utf-8',
         format: 'txt',
         description: 'Essay on the proper use of time',
       },

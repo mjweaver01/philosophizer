@@ -86,14 +86,14 @@ export const greekPhilosophers = {
       {
         id: 'aristotle-rhetoric',
         title: 'Rhetoric',
-        url: 'https://www.gutenberg.org/cache/epub/2154/pg2154.txt',
+        url: 'https://classics.mit.edu/Aristotle/rhetoric.mb.txt',
         format: 'txt',
         description: 'The art of persuasion',
       },
       {
         id: 'aristotle-organon',
         title: 'The Organon (Logic)',
-        url: 'https://www.gutenberg.org/cache/epub/46120/pg46120.txt',
+        url: 'https://en.wikisource.org/wiki/https://dn790001.ca.archive.org/0/items/organonorlogica00porpgoog/organonorlogica00porpgoog_djvu.txt',
         format: 'txt',
         description: "Aristotle's works on logic",
       },
@@ -114,7 +114,7 @@ export const greekPhilosophers = {
       {
         id: 'aristotle-categories',
         title: 'The Categories',
-        url: 'https://www.gutenberg.org/cache/epub/6763/pg6763.txt',
+        url: 'https://www.gutenberg.org/ebooks/2412.txt.utf-8',
         format: 'txt',
         description: 'Foundational work on ontology and classification',
       },

@@ -67,7 +67,7 @@ export const christianPhilosophers = {
       {
         id: 'bible-romans',
         title: 'Romans',
-        url: 'https://www.gutenberg.org/cache/epub/8053/pg8053.txt',
+        url: 'https://www.gutenberg.org/cache/epub/8045/pg8045.txt',
         format: 'txt',
         description: "Paul's systematic exposition of the gospel",
       },
@@ -176,14 +176,14 @@ export const christianPhilosophers = {
       {
         id: 'augustine-enchiridion',
         title: 'Enchiridion (Handbook on Faith, Hope and Love)',
-        url: 'https://www.gutenberg.org/cache/epub/27380/pg27380.txt',
+        url: 'https://ccel.org/ccel/a/augustine/enchiridion/cache/enchiridion.txt',
         format: 'txt',
         description: 'Concise summary of Christian doctrine',
       },
       {
         id: 'augustine-christian-doctrine',
         title: 'On Christian Doctrine',
-        url: 'https://www.gutenberg.org/cache/epub/66442/pg66442.txt',
+        url: 'https://ccel.org/ccel/a/augustine/doctrine/cache/doctrine.txt',
         format: 'txt',
         description:
           'Guide to interpreting Scripture and teaching Christian truth',
@@ -299,7 +299,7 @@ export const christianPhilosophers = {
       {
         id: 'aquinas-summa-part2-2',
         title: 'Summa Theologica - Part II-II (Secunda Secundae)',
-        url: 'https://www.gutenberg.org/cache/epub/18755/pg18755.txt',
+        url: 'https://www.gutenberg.org/ebooks/18755.txt.utf-8',
         format: 'txt',
         description: 'On specific virtues and vices',
       },
@@ -313,7 +313,7 @@ export const christianPhilosophers = {
       {
         id: 'aquinas-summa-contra-gentiles',
         title: 'Summa Contra Gentiles',
-        url: 'https://www.gutenberg.org/cache/epub/42814/pg42814.txt',
+        url: 'https://ccel.org/ccel/a/aquinas/gentiles/cache/gentiles.txt',
         format: 'txt',
         description: 'Apologetic work defending Christianity through reason',
       },
@@ -453,7 +453,7 @@ export const christianPhilosophers = {
       {
         id: 'luther-bondage-will',
         title: 'The Bondage of the Will',
-        url: 'https://www.gutenberg.org/cache/epub/37380/pg37380.txt',
+        url: 'https://ccel.org/ccel/l/luther/bondage/cache/bondage.txt',
         format: 'txt',
         description:
           "Luther's response to Erasmus on free will and predestination",
@@ -461,7 +461,7 @@ export const christianPhilosophers = {
       {
         id: 'luther-large-catechism',
         title: 'The Large Catechism',
-        url: 'https://www.gutenberg.org/cache/epub/2601/pg2601.txt',
+        url: 'https://www.gutenberg.org/cache/epub/1722/pg1722.txt',
         format: 'txt',
         description:
           "Luther's comprehensive catechism for teaching Christian doctrine",
@@ -641,7 +641,7 @@ export const christianPhilosophers = {
       {
         id: 'zwingli-selected-works',
         title: 'Selected Works of Huldreich Zwingli',
-        url: 'https://www.gutenberg.org/cache/epub/46961/pg46961.txt',
+        url: 'https://archive.org/download/selectedworksofh00zwin/selectedworksofh00zwin_djvu.txt',
         format: 'txt',
         description: "Collection of Zwingli's theological writings",
       },
@@ -711,7 +711,7 @@ export const christianPhilosophers = {
       {
         id: 'knox-reformation-scotland',
         title: 'The History of the Reformation of Religion in Scotland',
-        url: 'https://www.gutenberg.org/cache/epub/48131/pg48131.txt',
+        url: 'https://www.gutenberg.org/cache/epub/48250/pg48250.txt',
         format: 'txt',
         description: "Knox's firsthand account of the Scottish Reformation",
       },
@@ -786,7 +786,7 @@ export const christianPhilosophers = {
       {
         id: 'melanchthon-loci-communes',
         title: 'Loci Communes (Common Places)',
-        url: 'https://www.gutenberg.org/cache/epub/56389/pg56389.txt',
+        url: 'https://archive.org/download/locicommunesofph0000mela/locicommunesofph0000mela_djvu.txt',
         format: 'txt',
         description: 'First systematic theology of the Reformation',
       },
@@ -863,7 +863,7 @@ export const christianPhilosophers = {
       {
         id: 'wesley-sermons-vol1',
         title: 'Sermons on Several Occasions, Volume 1',
-        url: 'https://www.gutenberg.org/cache/epub/45849/pg45849.txt',
+        url: 'https://archive.org/download/bim_eighteenth-century_sermons-on-several-occas_wesley-john_1746_1/bim_eighteenth-century_sermons-on-several-occas_wesley-john_1746_1_djvu.txt',
         format: 'txt',
         description: "Wesley's foundational sermons on Methodist doctrine",
       },
@@ -971,7 +971,7 @@ export const christianPhilosophers = {
       {
         id: 'bunyan-holy-war',
         title: 'The Holy War',
-        url: 'https://www.gutenberg.org/cache/epub/7140/pg7140.txt',
+        url: 'https://www.gutenberg.org/cache/epub/395/pg395.txt',
         format: 'txt',
         description: 'Allegory of spiritual warfare for the soul',
       },
@@ -1357,7 +1357,7 @@ export const christianPhilosophers = {
       {
         id: 'eckhart-sermons',
         title: "Meister Eckhart's Sermons",
-        url: 'https://www.gutenberg.org/cache/epub/42629/pg42629.txt',
+        url: 'https://ccel.org/ccel/eckhart/sermons.txt',
         format: 'txt',
         description: "Collection of Eckhart's mystical sermons",
       },

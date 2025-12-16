@@ -53,7 +53,8 @@ export const hermeticPhilosophers = {
     notableWorks: [
       'The Kybalion',
       'The Corpus Hermeticum',
-      'The Emerald Tablet',
+      'The Emerald Tablets',
+      'The Divine Pymander',
     ],
     textSources: [
       {
@@ -64,9 +65,23 @@ export const hermeticPhilosophers = {
         description: 'The Seven Hermetic Principles by The Three Initiates',
       },
       {
+        id: 'corpus-hermeticum',
+        title: 'The Corpus Hermeticum',
+        url: 'https://ia801606.us.archive.org/25/items/pdfy-jcWLRBnyXg-DUcMH/The%20Corpus%20Hermeticum_djvu.txt',
+        format: 'txt',
+        description: 'The Corpus Hermeticum by Hermes Trismegistus',
+      },
+      {
+        id: 'emerald-tablets-of-thoth',
+        title: 'The Emerald Tablets of Thoth',
+        url: 'https://ia600801.us.archive.org/29/items/TheEmeraldTabletsOfThoth/The_Emerald_Tablets_Of_Thoth_djvu.txt',
+        format: 'txt',
+        description: 'The Emerald Tablets of Thoth the Atlantean',
+      },
+      {
         id: 'hermetica',
         title: 'The Divine Pymander (Corpus Hermeticum)',
-        url: 'https://www.gutenberg.org/cache/epub/54754/pg54754.txt',
+        url: 'https://dn720501.ca.archive.org/0/items/bim_early-english-books-1641-1700_the-divine-pymander-_hermes-trismegistus_1650/bim_early-english-books-1641-1700_the-divine-pymander-_hermes-trismegistus_1650_djvu.txt',
         format: 'txt',
         description: 'Ancient Hermetic texts attributed to Hermes Trismegistus',
       },

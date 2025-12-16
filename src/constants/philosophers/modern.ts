@@ -233,7 +233,7 @@ export const modernPhilosophers = {
       {
         id: 'nietzsche-birth-tragedy',
         title: 'The Birth of Tragedy',
-        url: 'https://www.gutenberg.org/cache/epub/7134/pg7134.txt',
+        url: 'https://www.gutenberg.org/ebooks/51356.txt.utf-8',
         format: 'txt',
         description: 'Apollonian and Dionysian forces in art and culture',
       },
@@ -297,7 +297,7 @@ export const modernPhilosophers = {
       {
         id: 'nietzsche-early-greek-philosophy',
         title: 'Early Greek Philosophy and Other Essays',
-        url: 'https://www.gutenberg.org/cache/epub/5639/pg5639.txt',
+        url: 'https://www.gutenberg.org/ebooks/51548.txt.utf-8',
         format: 'txt',
         description: 'Essays on pre-Socratic philosophers',
       },
@@ -397,21 +397,21 @@ export const modernPhilosophers = {
       {
         id: 'kierkegaard-fear-trembling',
         title: 'Fear and Trembling',
-        url: 'https://www.gutenberg.org/cache/epub/45631/pg45631.txt',
+        url: 'https://www.gutenberg.org/cache/epub/60333/pg60333.txt',
         format: 'txt',
         description: 'Meditation on Abraham and the leap of faith',
       },
       {
         id: 'kierkegaard-sickness-unto-death',
         title: 'The Sickness Unto Death',
-        url: 'https://www.gutenberg.org/cache/epub/27618/pg27618.txt',
+        url: 'https://archive.org/details/in.ernet.dli.2015.189042',
         format: 'txt',
         description: 'Analysis of despair as the failure to be oneself',
       },
       {
         id: 'kierkegaard-present-age',
         title: 'The Present Age',
-        url: 'https://www.gutenberg.org/cache/epub/57944/pg57944.txt',
+        url: 'http://www.historyguide.org/europe/present_age.html',
         format: 'txt',
         description: 'Critique of modernity and the loss of passion',
       },

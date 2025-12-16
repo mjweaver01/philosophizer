@@ -58,7 +58,7 @@ export const jewishPhilosophers = {
       {
         id: 'maimonides-guide-perplexed',
         title: 'Guide for the Perplexed',
-        url: 'https://www.gutenberg.org/cache/epub/50746/pg50746.txt',
+        url: 'https://www.gutenberg.org/ebooks/73584.txt.utf-8',
         format: 'txt',
         description:
           'Philosophical masterwork reconciling Judaism and Aristotelian philosophy',

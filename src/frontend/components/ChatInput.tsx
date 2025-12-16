@@ -4,7 +4,7 @@ interface ChatInputProps {
   input: string;
   isProcessing: boolean;
   onInputChange: (value: string) => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
 }
 
 export function ChatInput({
@@ -13,15 +13,39 @@ export function ChatInput({
   onInputChange,
   onSubmit,
 }: ChatInputProps) {
+  const formRef = React.useRef<HTMLFormElement>(null);
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize the textarea as the user types (up to a max height).
+  React.useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 240)}px`;
+  }, [input]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Enter submits, Shift+Enter inserts newline.
+    if (e.key !== 'Enter' || e.shiftKey) return;
+    if ((e.nativeEvent as any)?.isComposing) return;
+
+    e.preventDefault();
+    if (isProcessing || !input.trim()) return;
+    formRef.current?.requestSubmit();
+  };
+
   return (
-    <form onSubmit={onSubmit}>
-      <div className="relative flex items-center">
-        <input
-          type="text"
+    <form ref={formRef} onSubmit={onSubmit}>
+      <div className="relative flex items-end">
+        <textarea
+          ref={textareaRef}
           value={input}
           onChange={e => onInputChange(e.target.value)}
-          placeholder="Ask anything..."
-          className="w-full px-4 py-3 pr-12 bg-surface-secondary border border-border rounded-lg text-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50"
+          onKeyDown={handleKeyDown}
+          placeholder="Ask anything... (Shift+Enter for newline)"
+          rows={1}
+          disabled={isProcessing}
+          className="w-full px-4 py-3 pr-12 bg-surface-secondary border border-border rounded-lg text-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 resize-none overflow-y-auto max-h-[240px]"
         />
         <button
           type="submit"
