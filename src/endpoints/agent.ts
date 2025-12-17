@@ -53,8 +53,8 @@ export const agent = {
       });
 
       return createAgentUIStreamResponse({
-        agent,
-        messages: formattedMessages,
+        agent: agent as any,
+        uiMessages: formattedMessages,
       });
     } catch (error) {
       console.error('Agent stream error:', error);

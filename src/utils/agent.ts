@@ -1,4 +1,4 @@
-import { ToolLoopAgent, stepCountIs } from 'ai';
+import { ToolLoopAgent } from 'ai';
 import { LLM_MODEL } from '../constants/providers';
 import { SYSTEM_PROMPT } from '../constants/prompts';
 import { tools } from '../tools';
@@ -26,7 +26,7 @@ export async function initializeAgent(): Promise<void> {
 
 export function getAgent() {
   if (!agentInstance) {
-    throw new Error('Agent not initialized. Call initializeAgent() first.');
+    initializeAgent();
   }
   return agentInstance;
 }
