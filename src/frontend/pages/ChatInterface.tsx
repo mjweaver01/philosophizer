@@ -132,22 +132,16 @@ export function ChatInterface() {
   }, [messages]);
 
   // Auto-save messages when they change (debounced)
+  const messageIds = messages.map(m => m.id).join(',');
   useEffect(() => {
     if (!currentConversation || messages.length === 0 || isProcessing) return;
 
     const timeout = setTimeout(() => {
-      const formattedMessages = convertMessagesForSaving();
-      saveMessages(formattedMessages);
+      saveMessages(convertMessagesForSaving());
     }, 1000);
 
     return () => clearTimeout(timeout);
-  }, [
-    messages,
-    currentConversation,
-    isProcessing,
-    saveMessages,
-    convertMessagesForSaving,
-  ]);
+  }, [messageIds, currentConversation?.id, isProcessing]);
 
   // Auto-generate title from first user message
   useEffect(() => {
