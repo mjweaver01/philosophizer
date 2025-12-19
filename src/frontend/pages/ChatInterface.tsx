@@ -57,12 +57,26 @@ export function ChatInterface() {
     transport: new DefaultChatTransport({
       api: '/agent',
     }),
+    onError: err => {
+      const errorText =
+        err instanceof Error ? err.message : 'An unexpected error occurred';
+      setMessages(prev => [
+        ...prev,
+        {
+          id: `error-${Date.now()}`,
+          role: 'assistant',
+          parts: [
+            { type: 'text', text: `Sorry, something went wrong: ${errorText}` },
+          ],
+        } as any,
+      ]);
+    },
   });
 
   const { scrollEndRef, scrollContainerRef, handleScroll, enableAutoScroll } =
     useAutoScroll(messages);
 
-  const isProcessing = status !== 'ready';
+  const isProcessing = status === 'submitted' || status === 'streaming';
 
   // Load conversation from URL on mount
   useEffect(() => {
