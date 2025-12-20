@@ -25,7 +25,7 @@ export function ThinkBlock({ content, isStreaming = false }: ThinkBlockProps) {
         </svg>
         <span className="font-medium">Reasoning</span>
       </summary>
-      <div className="px-3 pb-2 text-sm text-text-secondary whitespace-pre-wrap border-t border-border pt-2">
+      <div className="px-3 pb-2 text-sm text-text-secondary whitespace-pre-wrap border-t border-border pt-2 overflow-x-auto max-h-56 overflow-y-auto">
         {content}
       </div>
     </details>
