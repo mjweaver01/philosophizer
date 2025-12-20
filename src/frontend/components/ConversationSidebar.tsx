@@ -182,7 +182,7 @@ export function ConversationSidebar({
                             e.stopPropagation();
                             handleStartEdit(conversation);
                           }}
-                          className="p-1.5 text-text-muted hover:text-text rounded hover:bg-background"
+                          className="p-1.5 text-text-muted hover:text-text rounded hover:bg-background cursor-pointer"
                           title="Rename"
                         >
                           <svg
@@ -208,7 +208,7 @@ export function ConversationSidebar({
                               onDeleteConversation(conversation.id);
                             }
                           }}
-                          className="p-1.5 text-text-muted hover:text-error rounded hover:bg-background"
+                          className="p-1.5 text-text-muted hover:text-error rounded hover:bg-background cursor-pointer"
                           title="Delete"
                         >
                           <svg
