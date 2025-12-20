@@ -1,9 +1,19 @@
+import { useEffect, useRef } from 'react';
+
 interface ThinkBlockProps {
   content: string;
   isStreaming?: boolean;
 }
 
 export function ThinkBlock({ content, isStreaming = false }: ThinkBlockProps) {
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isStreaming && contentRef.current) {
+      contentRef.current.scrollTop = contentRef.current.scrollHeight;
+    }
+  }, [content, isStreaming]);
+
   return (
     <details
       className="my-3 first:mt-0 group bg-surface-secondary border border-border rounded-lg"
@@ -25,7 +35,10 @@ export function ThinkBlock({ content, isStreaming = false }: ThinkBlockProps) {
         </svg>
         <span className="font-medium">Reasoning</span>
       </summary>
-      <div className="px-3 pb-2 text-sm text-text-secondary whitespace-pre-wrap border-t border-border pt-2 overflow-x-auto max-h-56 overflow-y-auto">
+      <div
+        ref={contentRef}
+        className="px-3 pb-2 text-sm text-text-secondary whitespace-pre-wrap border-t border-border pt-2 overflow-x-auto max-h-56 overflow-y-auto"
+      >
         {content}
       </div>
     </details>

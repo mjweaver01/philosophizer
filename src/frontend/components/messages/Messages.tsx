@@ -98,8 +98,11 @@ export function Messages({
         />
       )}
 
-      {messages.map(message => (
-        <div key={message.id} className="py-8">
+      {messages.map((message, index) => (
+        <div
+          key={message.id}
+          className={`py-8 ${index === messages.length - 1 ? 'pb-12' : ''}`}
+        >
           <div className="max-w-3xl mx-auto">
             <div className="flex gap-4">
               <MessageAvatar role={message.role} />
