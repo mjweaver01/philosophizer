@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ChatInterface } from './pages/ChatInterface';
+import { ChatPage } from './pages/ChatPage';
 import { AboutPage } from './pages/AboutPage';
 import './styles.css';
 
@@ -22,7 +22,7 @@ function App() {
   }
 
   // Default to chat interface (handles / and /c/:id)
-  return <ChatInterface />;
+  return <ChatPage />;
 }
 
 const root = createRoot(document.getElementById('root') as HTMLElement);

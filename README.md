@@ -10,16 +10,16 @@ Built with Bun, React, TypeScript, and ChromaDB for semantic search over primary
 - **AI SDK**: Vercel AI SDK v6 (beta)
 - **Frontend**: React 19, TypeScript
 - **Styling**: TailwindCSS 4
-- **Vector Database**: ChromaDB (for RAG and conversation storage)
-- **Markdown**: Marked with KaTeX for math rendering
+- **Vector Database**: ChromaDB
+- **Markdown**: Marked with KaTeX
 - **Validation**: Zod schemas
 
 ## Setup
 
 ### Prerequisites
 
-- [Bun](https://bun.sh) installed
-- [Docker](https://docker.com) installed (for ChromaDB)
+- [Bun](https://bun.sh)
+- [Docker](https://docker.com)
 
 ### Installation
 

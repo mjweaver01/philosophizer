@@ -29,7 +29,7 @@ function setConversationIdInUrl(id: string | null) {
   }
 }
 
-export function ChatInterface() {
+export function ChatPage() {
   const [input, setInput] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [initialLoadDone, setInitialLoadDone] = useState(false);
@@ -250,7 +250,7 @@ export function ChatInterface() {
   const MenuButton = () => (
     <button
       onClick={() => setSidebarOpen(!sidebarOpen)}
-      className="flex items-center justify-center p-2 bg-surface border border-border hover:bg-surface-secondary text-text-muted hover:text-text rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary"
+      className="flex items-center justify-center p-2 bg-surface border border-border hover:bg-surface-secondary text-text-muted hover:text-text rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
       title="Conversations"
     >
       <svg
@@ -285,7 +285,7 @@ export function ChatInterface() {
   const AboutButton = () => (
     <a
       href="/about"
-      className="flex items-center justify-center p-2 bg-surface border border-border hover:bg-surface-secondary text-text-muted hover:text-text rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary"
+      className="flex items-center justify-center p-2 bg-surface border border-border hover:bg-surface-secondary text-text-muted hover:text-text rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
       title="About - View indexed philosophers"
     >
       <svg

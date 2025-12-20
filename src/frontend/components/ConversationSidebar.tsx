@@ -88,7 +88,7 @@ export function ConversationSidebar({
                   onNewConversation();
                   onClose();
                 }}
-                className="flex items-center justify-center p-2 bg-surface border border-border hover:bg-surface-secondary text-text-muted hover:text-text rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary"
+                className="flex items-center justify-center p-2 bg-surface border border-border hover:bg-surface-secondary text-text-muted hover:text-text rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
                 title="New conversation"
               >
                 <svg
@@ -108,7 +108,7 @@ export function ConversationSidebar({
               {/* Close Button (mobile only) */}
               <button
                 onClick={onClose}
-                className="flex items-center justify-center p-2 bg-surface border border-border hover:bg-surface-secondary text-text-muted hover:text-text rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary"
+                className="flex items-center justify-center p-2 bg-surface border border-border hover:bg-surface-secondary text-text-muted hover:text-text rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
                 title="Close sidebar"
               >
                 <svg
@@ -163,7 +163,7 @@ export function ConversationSidebar({
                           onSelectConversation(conversation.id);
                           onClose();
                         }}
-                        className="w-full text-left p-2 pr-16"
+                        className="w-full text-left p-2 pr-16 cursor-pointer"
                       >
                         <div className="text-sm text-text truncate">
                           {conversation.title}
