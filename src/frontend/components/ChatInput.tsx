@@ -45,7 +45,7 @@ export function ChatInput({
           placeholder="Ask anything..."
           rows={1}
           disabled={isProcessing}
-          className="w-full px-4 py-3 pr-12 bg-surface-secondary border border-border rounded-lg text-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 resize-none overflow-y-auto max-h-[240px]"
+          className="w-full px-4 py-3 pr-12 bg-surface-secondary border border-border rounded-lg text-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 resize-none overflow-y-auto no-scrollbar max-h-[240px]"
         />
         <button
           type="submit"
