@@ -11,7 +11,7 @@ Built with Bun, React, TypeScript, and ChromaDB for semantic search over primary
 - **Frontend**: React 19, TypeScript
 - **Styling**: TailwindCSS 4
 - **Vector Database**: ChromaDB
-- **Markdown**: Marked with KaTeX
+- **Markdown**: Streamdown (optimized for streaming AI responses)
 - **Validation**: Zod schemas
 
 ## Setup
