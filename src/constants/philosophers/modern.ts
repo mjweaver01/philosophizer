@@ -506,8 +506,13 @@ export const modernPhilosophers = {
       'The Unheard Cry for Meaning',
     ],
     textSources: [
-      // Viktor Frankl's works are still under copyright
-      // "Man's Search for Meaning" was first published in 1946
+      {
+        id: 'viktorFrankl-mans-search-for-meaning',
+        title: "Man's Search for Meaning",
+        url: 'https://dn720001.ca.archive.org/0/items/viktor-emil-frankl-mans-search-for-meaning/Viktor-Emil-Frankl-Mans-Search-for-Meaning_djvu.txt',
+        format: 'txt',
+        description: "Viktor Frankl's book on finding meaning in life",
+      },
     ],
     keyExcerpts: [
       {

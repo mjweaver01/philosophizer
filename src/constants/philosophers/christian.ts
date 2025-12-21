@@ -459,6 +459,14 @@ export const christianPhilosophers = {
           "Luther's response to Erasmus on free will and predestination",
       },
       {
+        id: 'luther-small-catechism',
+        title: 'The Small Catechism',
+        url: 'https://www.gutenberg.org/cache/epub/1670/pg1670.txt',
+        format: 'txt',
+        description:
+          "Luther's concise catechism for teaching Christian doctrine to children",
+      },
+      {
         id: 'luther-large-catechism',
         title: 'The Large Catechism',
         url: 'https://www.gutenberg.org/cache/epub/1722/pg1722.txt',

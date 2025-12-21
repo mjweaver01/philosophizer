@@ -442,6 +442,22 @@ export const jewishPhilosophers = {
     textSources: [
       // Lurianic texts are primarily in Hebrew and not available on Gutenberg
       // They were transmitted orally and written down by his student Chaim Vital
+      {
+        id: 'the-gate-of-reincarnations',
+        title: 'The Gate of Reincarnations',
+        url: 'https://archive.org/stream/the-gate-of-reincarnations-eng/The%20Gate%20of%20reincarnations%20Eng_djvu.txt',
+        format: 'txt',
+        description:
+          'The Gate of Reincarnations is a book of Jewish mysticism by Chaim Vital',
+      },
+      {
+        id: 'pri-etz-chaim',
+        title: 'Pri Etz Chaim (Fruit of the Tree of Life)',
+        url: 'https://dn790002.ca.archive.org/0/items/pri-etz-chaim-eng/Pri_Etz_Chaim_eng_djvu.txt',
+        format: 'txt',
+        description:
+          'Pri Etz Chaim is a book of Jewish mysticism by Chaim Vital',
+      },
     ],
     keyExcerpts: [
       {
@@ -537,6 +553,13 @@ export const jewishPhilosophers = {
     textSources: [
       // The Zohar is in Aramaic and full translations are under copyright
       // Partial translations and secondary sources are available
+      {
+        id: 'zohar',
+        title: 'The Zohar',
+        url: 'https://dn790002.ca.archive.org/0/items/THEZOHAR_201906/THE%20ZOHAR_djvu.txt',
+        format: 'txt',
+        description: 'The Zohar is a book of Jewish mysticism',
+      },
     ],
     keyExcerpts: [
       {
