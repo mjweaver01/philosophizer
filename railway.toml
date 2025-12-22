@@ -2,30 +2,8 @@
 builder = "dockerfile"
 dockerfilePath = "Dockerfile"
 
-[[services]]
-name = "app"
-source = "."
-
-[services.healthcheck]
-path = "/"
-timeout = 10
-interval = 30
-
-[[services]]
-name = "chroma"
-source = "."
-builder = "dockerimage"
-dockerImage = "chromadb/chroma:latest"
-
-[services.volumes]
-mountPath = "/chroma/chroma"
-
-[services.env]
-IS_PERSISTENT = "TRUE"
-ANONYMIZED_TELEMETRY = "FALSE"
-
-[services.healthcheck]
-path = "/api/v1/heartbeat"
-timeout = 10
-interval = 30
-
+[deploy]
+healthcheckPath = "/"
+healthcheckTimeout = 10
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3

@@ -173,3 +173,72 @@ bun run start
 ```bash
 bun run dev:debug
 ```
+
+## Railway Deployment
+
+Deploy to Railway with both the app and ChromaDB vector database as separate services.
+
+### Quick Start
+
+1. **Deploy your app:**
+
+   ```bash
+   railway login
+   railway init
+   railway up
+   ```
+
+2. **Add ChromaDB service:**
+   - In Railway dashboard: **+ New Service** → **Docker Image**
+   - Image: `chromadb/chroma:latest`
+   - Add volume at `/chroma/chroma`
+   - Set environment variables:
+     - `IS_PERSISTENT=TRUE`
+     - `ANONYMIZED_TELEMETRY=FALSE`
+
+3. **Configure connection:**
+   - In your app service, set: `CHROMA_URL=http://chroma.railway.internal:8000`
+   - Replace `chroma` with your actual ChromaDB service name
+
+4. **Set required environment variables** in your app service:
+   - `NODE_ENV=production`
+   - `AI_BASE_URL=https://api.openai.com/v1` (or your AI provider)
+   - `AI_API_KEY` (your AI API key)
+   - `LLM_MODEL=gpt-4o` (your model)
+   - `SEARCH_MODEL=gpt-4o-mini`
+
+5. **Index your texts** (one-time):
+   ```bash
+   railway run bun run rag:index
+   ```
+
+### Monitoring
+
+View logs:
+
+```bash
+railway logs --service app
+railway logs --service chroma
+```
+
+### Troubleshooting
+
+**500 errors / ChromaDB connection issues:**
+
+- Verify `CHROMA_URL` matches your ChromaDB service name
+- Check both services are running: `railway status`
+- View logs: `railway logs`
+
+**Can't connect to ChromaDB:**
+
+- Ensure both services are in the same Railway project
+- Verify private networking is enabled
+- Check ChromaDB service name in dashboard
+
+## Docker Compose
+
+For local production deployment with all services:
+
+```bash
+docker compose up -d
+```
