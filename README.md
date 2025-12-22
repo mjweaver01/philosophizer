@@ -173,11 +173,3 @@ bun run start
 ```bash
 bun run dev:debug
 ```
-
-## Docker Compose
-
-For production deployment with all services:
-
-```bash
-docker compose up -d
-```

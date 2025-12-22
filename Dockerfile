@@ -35,8 +35,8 @@ FROM oven/bun:1-slim AS runtime
 WORKDIR /app
 
 # Create non-root user for security
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 bunjs
+RUN groupadd --system --gid 1001 nodejs && \
+    useradd --system --uid 1001 --gid nodejs --shell /bin/sh bunjs
 
 # Copy application files
 COPY --from=builder --chown=bunjs:nodejs /app/node_modules ./node_modules
