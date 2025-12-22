@@ -4,3 +4,7 @@ node_modules/
 .DS_Store
 dist/
 src/rag/texts
+
+scripts/oracle-deploy/.env
+scripts/oracle-deploy/.env.production
+scripts/oracle-deploy/ssl/

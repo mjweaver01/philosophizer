@@ -176,8 +176,50 @@ bun run dev:debug
 
 ## Docker Compose
 
-For production deployment with all services:
+For local production testing with all services:
 
 ```bash
 docker compose up -d
 ```
+
+## Deployment
+
+### Oracle Cloud (Always Free)
+
+Deploy for free on Oracle Cloud's Always Free tier (4 OCPUs, 24GB RAM):
+
+**Quick Start:**
+
+1. Create an Oracle Cloud VM (Ubuntu 22.04 ARM64)
+2. SSH into your server
+3. Run setup: `sudo bash scripts/oracle-deploy/01-server-setup.sh`
+4. Configure: `cp scripts/oracle-deploy/env.production.template .env && nano .env`
+5. Deploy: `bash scripts/oracle-deploy/02-deploy.sh`
+
+**Complete Guide:** See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for detailed step-by-step instructions including:
+
+- Oracle Cloud account setup
+- VM creation and configuration
+- Network security setup
+- SSH connection guides
+- Troubleshooting
+- Backup and restore procedures
+- Custom domain and SSL setup
+
+**Management:** Use the included scripts for easy maintenance:
+
+```bash
+bash scripts/oracle-deploy/manage.sh status   # Check service status
+bash scripts/oracle-deploy/manage.sh logs     # View logs
+bash scripts/oracle-deploy/manage.sh backup   # Backup data
+bash scripts/oracle-deploy/manage.sh restart  # Restart services
+```
+
+See [scripts/oracle-deploy/README.md](scripts/oracle-deploy/README.md) for all available commands.
+
+### Other Hosting Options
+
+- **Railway**: Deploy with one click from Git (free $5/month credit)
+- **Fly.io**: Free tier with persistent volumes
+- **Render**: Free web services (no persistent storage on free tier)
+- **Vercel/Netlify + Backend**: Split deployment (frontend on Vercel, backend elsewhere)
