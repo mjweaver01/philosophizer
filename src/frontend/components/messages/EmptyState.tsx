@@ -1,3 +1,5 @@
+import phiLogo from '../../phi.svg';
+
 interface EmptyStateProps {
   starterQuestions: string[];
   onStarterQuestion: (question: string) => void;
@@ -10,6 +12,11 @@ export function EmptyState({
   return (
     <div className="flex items-center justify-center h-full">
       <div className="text-center py-8">
+        <img
+          src={phiLogo}
+          alt="Philosophizer"
+          className="w-16 h-16 mx-auto mb-4"
+        />
         <h2 className="text-3xl font-semibold text-text">
           Ask anything about philosophy or theology
         </h2>
