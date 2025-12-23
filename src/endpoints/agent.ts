@@ -1,11 +1,15 @@
 import { createAgentUIStreamResponse } from 'ai';
 import type { AgentRequest } from '../types';
-import { getAgent } from '../utils/agent';
+import { createAgent } from '../utils/agent';
+
+interface AgentRequestWithConversation extends AgentRequest {
+  conversationId?: string;
+}
 
 export const agent = {
   POST: async (req: Request) => {
     try {
-      const body = (await req.json()) as AgentRequest;
+      const body = (await req.json()) as AgentRequestWithConversation;
 
       if (!body.messages || !Array.isArray(body.messages)) {
         return new Response(
@@ -31,11 +35,7 @@ export const agent = {
         );
       }
 
-      const agent = getAgent();
-
-      // Handle messages in both formats (parts or content)
       const formattedMessages = body.messages.map((msg: any) => {
-        // If message already has parts, use it directly
         if (msg.parts) {
           return {
             id: msg.id || crypto.randomUUID(),
@@ -44,7 +44,6 @@ export const agent = {
           };
         }
 
-        // Convert content field to parts format
         return {
           id: msg.id || crypto.randomUUID(),
           role: msg.role,
@@ -52,12 +51,18 @@ export const agent = {
         };
       });
 
+      console.log(
+        `[Agent] Creating agent with ${formattedMessages.length} messages${body.conversationId ? ` (conversation: ${body.conversationId})` : ''}`
+      );
+
+      const agent = await createAgent(formattedMessages, body.conversationId);
+
       return createAgentUIStreamResponse({
         agent: agent as any,
         uiMessages: formattedMessages,
       });
     } catch (error) {
-      console.error('Agent stream error:', error);
+      console.error('[Agent] Stream error:', error);
       return new Response(
         JSON.stringify({
           error: 'Internal server error',

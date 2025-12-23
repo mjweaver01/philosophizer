@@ -1,32 +1,84 @@
-import { ToolLoopAgent } from 'ai';
+import { ToolLoopAgent, stepCountIs, type UIMessage } from 'ai';
 import { LLM_MODEL } from '../constants/providers';
-import { SYSTEM_PROMPT } from '../constants/prompts';
+import { getSystemPrompt } from '../constants/prompts';
 import { tools } from '../tools';
 import { createProvider } from './providers';
+import { searchConversations, type ConversationMessage } from './conversations';
 
-let agentInstance: ReturnType<typeof createAgent> | null = null;
+function extractTextContent(message: UIMessage): string {
+  if (!message.parts || !Array.isArray(message.parts)) {
+    return '';
+  }
 
-function createAgent(provider: ReturnType<typeof createProvider>) {
+  return message.parts
+    .filter((part: any) => part.type === 'text')
+    .map((part: any) => part.text || '')
+    .join(' ');
+}
+
+async function getRelevantMemoryContext(
+  messages: UIMessage[],
+  conversationId?: string
+): Promise<string> {
+  if (messages.length === 0) return '';
+
+  const lastUserMessage = [...messages]
+    .reverse()
+    .find(msg => msg.role === 'user');
+
+  if (!lastUserMessage) return '';
+
+  const query = extractTextContent(lastUserMessage);
+  if (!query.trim()) return '';
+
+  try {
+    const results = await searchConversations(query, 3);
+
+    const relevantConversations = results.filter(result =>
+      conversationId ? result.id !== conversationId : true
+    );
+
+    if (relevantConversations.length === 0) return '';
+
+    let context = '\n\n# RELEVANT PAST CONVERSATIONS\n\n';
+    context +=
+      'You may reference these past discussions if relevant to the current query:\n\n';
+
+    for (const result of relevantConversations) {
+      const date = new Date(result.updatedAt).toLocaleDateString();
+      context += `**Past conversation** (${date}, ${(result.relevanceScore * 100).toFixed(0)}% relevant):\n`;
+      context += `"${result.title}"\n`;
+      context += `${result.content.slice(0, 400)}...\n\n`;
+    }
+
+    return context;
+  } catch (error) {
+    console.error('[Agent] Failed to retrieve memory context:', error);
+    return '';
+  }
+}
+
+export async function createAgent(
+  messages: UIMessage[],
+  conversationId?: string
+) {
+  const provider = createProvider();
+
+  const memoryContext = await getRelevantMemoryContext(
+    messages,
+    conversationId
+  );
+
+  const systemPrompt = getSystemPrompt() + memoryContext;
+
   return new ToolLoopAgent({
     model: provider.chat(LLM_MODEL),
-    instructions: SYSTEM_PROMPT,
+    instructions: systemPrompt,
     tools,
+    stopWhen: stepCountIs(15),
   });
 }
 
 export async function initializeAgent(): Promise<void> {
-  if (agentInstance) {
-    return;
-  }
-
-  const provider = createProvider();
-  console.log('🕵️  Initializing AI Agent with LLM model:', LLM_MODEL);
-  agentInstance = createAgent(provider);
-}
-
-export function getAgent() {
-  if (!agentInstance) {
-    initializeAgent();
-  }
-  return agentInstance;
+  console.log('🕵️  AI Agent configuration ready with LLM model:', LLM_MODEL);
 }
