@@ -40,18 +40,30 @@ const server = Bun.serve({
 });
 
 console.log(`\n💻 Web UI: http://localhost:${server.port}`);
-console.log('\nAPI Endpoints:');
+console.log(`    http://localhost:${server.port}     - Main chat interface`);
+console.log(`    http://localhost:${server.port}/about  - About page`);
+console.log(`    http://localhost:${server.port}/c/:id  - Conversation by ID`);
+
+console.log('\n🤖 AI Endpoints:');
 console.log(
-  '  POST /agent            - Agent with tools and conversation history'
+  '  POST /agent                 - Agent with tools and conversation history'
 );
+
+console.log('\n📚 RAG Endpoints:');
 console.log(
-  '  POST /rag              - Query the vector store for relevant passages'
+  '  POST /rag                   - Query vector store for relevant passages'
 );
-console.log('  GET  /rag              - Get collection statistics');
-console.log('  GET  /conversations    - List all conversations');
-console.log('  POST /conversations    - Create a new conversation');
-console.log('  GET  /conversations/:id - Get a conversation with messages');
+console.log('  GET  /rag                   - Get collection statistics');
+
+console.log('\n🗣️  Conversation Endpoints:');
+console.log('  GET  /conversations         - List all conversations');
+console.log('  POST /conversations         - Create a new conversation');
+console.log('  GET  /conversations/:id     - Get a conversation with messages');
 console.log(
-  '  PUT  /conversations/:id - Update conversation title or messages'
+  '  PUT  /conversations/:id     - Update conversation title or messages'
 );
-console.log('  DELETE /conversations/:id - Delete a conversation');
+console.log('  DELETE /conversations/:id   - Delete a conversation');
+
+console.log('\n🧙 Philosopher Endpoints:');
+console.log('  GET  /api/philosophers      - List all indexed philosophers');
+console.log('  GET  /api/philosophers/:id  - Get philosopher details');
