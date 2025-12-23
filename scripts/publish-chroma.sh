@@ -60,10 +60,10 @@ echo "📦 Backup file: $BACKUP_FILE ($BACKUP_SIZE)"
 echo "🏷️  Image: $IMAGE_NAME:$TAG"
 echo ""
 
-# Build the image
-echo "🔨 Building image..."
+# Build the image for linux/amd64 (Railway's architecture)
+echo "🔨 Building image for linux/amd64..."
 cd "$PROJECT_ROOT"
-docker build -f Dockerfile.chroma -t "$IMAGE_NAME:$TAG" .
+docker build --platform linux/amd64 -f Dockerfile.chroma -t "$IMAGE_NAME:$TAG" .
 
 IMAGE_SIZE=$(docker images "$IMAGE_NAME:$TAG" --format "{{.Size}}")
 echo "✅ Built: $IMAGE_NAME:$TAG ($IMAGE_SIZE)"

@@ -6,32 +6,58 @@
 #   docker compose down            # Stop all services
 #   docker compose logs -f         # View logs
 #
-# For production with pre-existing ChromaDB data:
-#   1. Copy your chroma-backup.tar.gz to the project root
-#   2. Run: ./scripts/restore-chroma.sh
-#   3. Run: docker compose up -d
+# First time setup:
+#   1. docker compose up -d
+#   2. Wait for ollama to download the model (check logs: docker compose logs -f ollama)
+#
+# To update ChromaDB data:
+#   1. bun run chroma:bp           # Backup and publish new image
+#   2. docker compose pull chroma  # Pull the updated image
+#   3. docker compose up -d        # Restart with new data
 
 services:
   # ==========================================================================
-  # ChromaDB Vector Database
+  # Ollama - Local LLM & Embedding Server
+  # ==========================================================================
+  ollama:
+    image: ollama/ollama:latest
+    container_name: philosophizer-ollama
+    restart: unless-stopped
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Pull the nomic-embed-text model on startup
+  ollama-pull:
+    image: ollama/ollama:latest
+    container_name: philosophizer-ollama-pull
+    depends_on:
+      ollama:
+        condition: service_healthy
+    entrypoint: ["ollama", "pull", "nomic-embed-text"]
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    restart: "no"
+
+  # ==========================================================================
+  # ChromaDB Vector Database (with pre-baked data)
   # ==========================================================================
   chroma:
-    image: chromadb/chroma:latest
+    image: mjweaver01/philosophizer:latest
     container_name: philosophizer-chroma
     restart: unless-stopped
     ports:
       - "${CHROMA_PORT:-8000}:8000"
-    volumes:
-      - chroma-data:/data
     environment:
       - IS_PERSISTENT=TRUE
       - ANONYMIZED_TELEMETRY=FALSE
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
 
   # ==========================================================================
   # Philosophizer Application
@@ -51,17 +77,19 @@ services:
       - CHROMA_URL=http://chroma:8000
       # LLM (chat) provider configuration
       - AI_BASE_URL=${AI_BASE_URL:-https://api.openai.com/v1}
-      - LLM_MODEL=${LLM_MODEL:-gpt-5.2}
+      - LLM_MODEL=${LLM_MODEL:-gpt-4.1}
       # Accept either AI_API_KEY or OPENAI_API_KEY (code falls back automatically)
       - AI_API_KEY=${AI_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - SEARCH_MODEL=${SEARCH_MODEL:-gpt-4.1-mini}
-      # Embedding service - configure based on your provider
-      - EMBEDDING_BASE_URL=${EMBEDDING_BASE_URL:-https://api.openai.com/v1}
-      - EMBEDDING_API_KEY=${EMBEDDING_API_KEY}
-      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-text-embedding-nomic-embed-text-v1.5-embedding}
+      # Embedding service - uses Ollama with nomic-embed-text
+      - EMBEDDING_BASE_URL=http://ollama:11434/v1
+      - EMBEDDING_API_KEY=ollama
+      - EMBEDDING_MODEL=nomic-embed-text
     depends_on:
       chroma:
+        condition: service_started
+      ollama:
         condition: service_healthy
     extra_hosts:
       # Allow container to access host machine services (for local LM Studio)
@@ -71,5 +99,5 @@ services:
 # Persistent Volumes
 # ==========================================================================
 volumes:
-  chroma-data:
-    name: philosophizer-chroma-data
+  ollama-data:
+    name: philosophizer-ollama-data
