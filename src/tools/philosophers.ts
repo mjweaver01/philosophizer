@@ -35,7 +35,11 @@ async function queryRAG(
     }
 
     // Query for relevant passages
-    const results = await queryPhilosopher(philosopherKey, topic, PHILOSOPHER_QUERY_LIMIT);
+    const results = await queryPhilosopher(
+      philosopherKey,
+      topic,
+      PHILOSOPHER_QUERY_LIMIT
+    );
 
     if (results.length === 0) {
       return { found: false, passages: '' };
@@ -68,7 +72,9 @@ async function queryRAG(
 
           if (preceding) {
             // Show last N chars of preceding context
-            const previewText = preceding.content.slice(-CONTEXT_PREVIEW_LENGTH).trim();
+            const previewText = preceding.content
+              .slice(-CONTEXT_PREVIEW_LENGTH)
+              .trim();
             passages += `> [...] ${previewText}\n>\n`;
           }
 
@@ -76,7 +82,9 @@ async function queryRAG(
 
           if (following) {
             // Show first N chars of following context
-            const previewText = following.content.slice(0, CONTEXT_PREVIEW_LENGTH).trim();
+            const previewText = following.content
+              .slice(0, CONTEXT_PREVIEW_LENGTH)
+              .trim();
             passages += `>\n> ${previewText} [...]\n`;
           }
         } catch {
@@ -195,102 +203,22 @@ function createPhilosopherTool(key: string, philosopher: Philosopher) {
 }
 
 // ============================================================================
-// EXPORTED TOOLS
-// ============================================================================
-
-// Ancient Greek Philosophy
-export const aristotle = createPhilosopherTool(
-  'aristotle',
-  PHILOSOPHERS.aristotle!
-);
-export const plato = createPhilosopherTool('plato', PHILOSOPHERS.plato!);
-export const socrates = createPhilosopherTool(
-  'socrates',
-  PHILOSOPHERS.socrates!
-);
-
-// Stoicism
-export const marcusAurelius = createPhilosopherTool(
-  'marcusAurelius',
-  PHILOSOPHERS.marcusAurelius!
-);
-export const epictetus = createPhilosopherTool(
-  'epictetus',
-  PHILOSOPHERS.epictetus!
-);
-export const seneca = createPhilosopherTool('seneca', PHILOSOPHERS.seneca!);
-
-// Christian Theology
-export const paulTheApostle = createPhilosopherTool(
-  'paulTheApostle',
-  PHILOSOPHERS.paulTheApostle!
-);
-export const augustine = createPhilosopherTool(
-  'augustine',
-  PHILOSOPHERS.augustine!
-);
-export const thomasAquinas = createPhilosopherTool(
-  'thomasAquinas',
-  PHILOSOPHERS.thomasAquinas!
-);
-export const martinLuther = createPhilosopherTool(
-  'martinLuther',
-  PHILOSOPHERS.martinLuther!
-);
-export const csLewis = createPhilosopherTool('csLewis', PHILOSOPHERS.csLewis!);
-
-// Eastern Philosophy
-export const confucius = createPhilosopherTool(
-  'confucius',
-  PHILOSOPHERS.confucius!
-);
-export const buddha = createPhilosopherTool('buddha', PHILOSOPHERS.buddha!);
-
-// Modern Philosophy
-export const kant = createPhilosopherTool('kant', PHILOSOPHERS.kant!);
-export const nietzsche = createPhilosopherTool(
-  'nietzsche',
-  PHILOSOPHERS.nietzsche!
-);
-export const kierkegaard = createPhilosopherTool(
-  'kierkegaard',
-  PHILOSOPHERS.kierkegaard!
-);
-
-// ============================================================================
-// TOOL COLLECTION
+// PHILOSOPHER TOOL GENERATION
 // ============================================================================
 
 /**
- * All philosopher tools as a collection for easy spreading into tools object
+ * Programmatically create all philosopher tools from the PHILOSOPHERS object.
+ * This eliminates the need to manually export each philosopher tool.
+ * Simply add a philosopher to the PHILOSOPHERS constant and it will automatically
+ * be available as a tool.
  */
-export const philosopherTools = {
-  // Ancient Greek
-  aristotle,
-  plato,
-  socrates,
-
-  // Stoicism
-  marcusAurelius,
-  epictetus,
-  seneca,
-
-  // Christian Theology
-  paulTheApostle,
-  augustine,
-  thomasAquinas,
-  martinLuther,
-  csLewis,
-
-  // Eastern Philosophy
-  confucius,
-  buddha,
-
-  // Modern Philosophy
-  kant,
-  nietzsche,
-  kierkegaard,
-};
+export const philosopherTools = Object.entries(PHILOSOPHERS).reduce(
+  (tools, [key, philosopher]) => {
+    tools[key] = createPhilosopherTool(key, philosopher);
+    return tools;
+  },
+  {} as Record<string, ReturnType<typeof createPhilosopherTool>>
+);
 
 /**
  * Get the list of all available philosopher tool names

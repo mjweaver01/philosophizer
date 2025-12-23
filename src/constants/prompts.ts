@@ -1,4 +1,182 @@
-export const SYSTEM_PROMPT = `
+import { PHILOSOPHERS } from './philosophers';
+import { philosopherTools } from '../tools/philosophers';
+
+function generatePhilosopherToolsList(): string {
+  const availablePhilosopherIds = Object.keys(philosopherTools);
+
+  const byTradition = new Map<
+    string,
+    Array<{ id: string; name: string; areas: string[] }>
+  >();
+
+  for (const [id, phil] of Object.entries(PHILOSOPHERS)) {
+    if (!availablePhilosopherIds.includes(id)) continue;
+    const tradition = phil.tradition;
+    if (!byTradition.has(tradition)) {
+      byTradition.set(tradition, []);
+    }
+    byTradition.get(tradition)!.push({
+      id,
+      name: phil.name,
+      areas: phil.areasOfExpertise,
+    });
+  }
+
+  let output = '';
+
+  const groupMapping: Record<string, string> = {
+    'Ancient Greek Philosophy': 'Ancient Greek Philosophy',
+    Stoicism: 'Stoic Philosophy',
+    'Christian Theology': 'Christian Theology & Philosophy',
+    'Christian Philosophy / Patristics': 'Christian Theology & Philosophy',
+    'Catholic Scholasticism': 'Christian Theology & Philosophy',
+    'Christian Mysticism / Rhineland Mysticism': 'Christian Mysticism',
+    'Christian Theosophy / Protestant Mysticism': 'Christian Mysticism',
+    'Protestant Reformation': 'Protestant Reformation',
+    'Protestant Reformation / Reformed Theology': 'Protestant Reformation',
+    'Protestant Reformation / Swiss Reformed': 'Protestant Reformation',
+    'Protestant Reformation / Scottish Presbyterianism':
+      'Protestant Reformation',
+    'Protestant Reformation / Lutheran Theology': 'Protestant Reformation',
+    'Methodism / Evangelical Christianity': 'Protestant Christianity',
+    'Puritan / Baptist Christianity': 'Protestant Christianity',
+    'Reformed / Great Awakening': 'Protestant Christianity',
+    'Baptist / Reformed Christianity': 'Protestant Christianity',
+    'Christian Apologetics': 'Christian Apologetics',
+    'Chinese Philosophy / Confucianism': 'Eastern Philosophy',
+    Buddhism: 'Eastern Philosophy',
+    'Hindu Philosophy / Vedanta': 'Eastern Philosophy',
+    'Kabbalah / Jewish Mysticism': 'Jewish Philosophy & Mysticism',
+    'Jewish Philosophy / Rationalism': 'Jewish Philosophy & Mysticism',
+    'Hasidic Judaism': 'Jewish Philosophy & Mysticism',
+    'Hasidic Judaism / Breslov': 'Jewish Philosophy & Mysticism',
+    'Hasidic Judaism / Chabad-Lubavitch': 'Jewish Philosophy & Mysticism',
+    'Hermeticism / Western Esotericism': 'Hermetic Philosophy',
+    'German Idealism / Enlightenment': 'Modern Philosophy',
+    'Existentialism / Nihilism': 'Modern Philosophy',
+    'Existentialism / Christian Philosophy': 'Modern Philosophy',
+    'Existential Psychology / Logotherapy': 'Modern Philosophy',
+  };
+
+  const grouped = new Map<
+    string,
+    Array<{ id: string; name: string; areas: string[] }>
+  >();
+
+  for (const [tradition, philosophers] of byTradition) {
+    const groupName = groupMapping[tradition] || tradition;
+    if (!grouped.has(groupName)) {
+      grouped.set(groupName, []);
+    }
+    grouped.get(groupName)!.push(...philosophers);
+  }
+
+  const sortedGroups = Array.from(grouped.entries()).sort(([a], [b]) => {
+    const order = [
+      'Ancient Greek Philosophy',
+      'Stoic Philosophy',
+      'Christian Theology & Philosophy',
+      'Christian Mysticism',
+      'Protestant Reformation',
+      'Protestant Christianity',
+      'Christian Apologetics',
+      'Eastern Philosophy',
+      'Jewish Philosophy & Mysticism',
+      'Hermetic Philosophy',
+      'Modern Philosophy',
+    ];
+    const indexA = order.indexOf(a);
+    const indexB = order.indexOf(b);
+    if (indexA === -1 && indexB === -1) return a.localeCompare(b);
+    if (indexA === -1) return 1;
+    if (indexB === -1) return -1;
+    return indexA - indexB;
+  });
+
+  for (const [tradition, philosophers] of sortedGroups) {
+    output += `\n### ${tradition}\n`;
+    for (const phil of philosophers) {
+      output += `- **${phil.id}**: ${phil.areas.join(', ')}\n`;
+    }
+  }
+
+  return output;
+}
+
+function generateResearchToolsList(): string {
+  const researchTools = [
+    {
+      name: 'webSearch',
+      description:
+        'General web search for any topic. Start here for broad exploration.',
+    },
+    {
+      name: 'readUrl',
+      description:
+        'Fetch full content from a specific URL. Use after webSearch to dive deeper into promising sources.',
+    },
+    {
+      name: 'wikipedia',
+      description:
+        'Search Wikipedia for factual background, definitions, and established knowledge.',
+    },
+    {
+      name: 'newsSearch',
+      description:
+        'Search recent news. Use for current events, developments, and time-sensitive topics.',
+    },
+  ];
+
+  const noteTools = [
+    {
+      name: 'saveNote',
+      description:
+        'Save important findings under a topic (e.g., "key facts", "statistics", "sources")',
+    },
+    {
+      name: 'recallNotes',
+      description:
+        'Recall saved notes to review before writing your final answer',
+    },
+    {
+      name: 'clearNotes',
+      description:
+        'Clear all notes (rarely needed, only for starting completely fresh)',
+    },
+  ];
+
+  const memoryTools = [
+    {
+      name: 'recallMemories',
+      description:
+        'Search previous conversations to recall context or discussions the user mentioned',
+    },
+    {
+      name: 'getMemoryDetails',
+      description: 'Get full details of a specific past conversation by title',
+    },
+  ];
+
+  let output = '## Research Tools\n\n### Information Gathering\n';
+  for (const tool of researchTools) {
+    output += `- **${tool.name}**: ${tool.description}\n`;
+  }
+
+  output += '\n### Research Organization\n';
+  for (const tool of noteTools) {
+    output += `- **${tool.name}**: ${tool.description}\n`;
+  }
+
+  output += '\n### Conversation Memory\n';
+  for (const tool of memoryTools) {
+    output += `- **${tool.name}**: ${tool.description}\n`;
+  }
+
+  return output;
+}
+
+export function getSystemPrompt(): string {
+  return `
 You are a philosophical and theological guide, offering wisdom from history's greatest thinkers on life's deepest questions.
 
 You have access to the teachings of philosophers and theologians spanning millennia, along with research tools to explore topics in depth.
@@ -8,51 +186,14 @@ You have access to the teachings of philosophers and theologians spanning millen
 ## Philosopher & Theologian Tools
 
 You have access to many philosopher/theologian tools, each providing deep wisdom from history's greatest thinkers. Use these for philosophical, ethical, religious, spiritual, or existential questions.
-
-### Ancient Greek Philosophy
-- **aristotle**: Virtue ethics, logic, metaphysics, human flourishing, the Golden Mean, eudaimonia
-- **plato**: Theory of Forms, the Allegory of the Cave, political philosophy, the tripartite soul
-- **socrates**: The Socratic Method, examined life, "I know that I know nothing," virtue as knowledge
-
-### Stoic Philosophy
-- **marcusAurelius**: Meditations, dichotomy of control, memento mori, inner citadel, duty, resilience
-- **epictetus**: Enchiridion, "some things are in our control," freedom through self-mastery, role ethics
-- **seneca**: Letters from a Stoic, time management, premeditatio malorum, tranquility of mind
-
-### Christian Theology & Philosophy
-- **paulTheApostle**: Grace, faith, salvation, justification, the Body of Christ, love (1 Corinthians 13)
-- **martinLuther**: Protestant Reformation, sola scriptura/fide/gratia, priesthood of believers, theology of the cross
-- **thomasAquinas**: Five Ways (proofs of God), natural law, faith and reason, just war theory, virtue ethics
-- **augustine**: Original sin, divine grace, free will, theodicy, the Two Cities, Confessions
-- **csLewis**: Christian apologetics, the moral argument, trilemma (Lord/Liar/Lunatic), problem of pain, the Four Loves
-
-### Eastern Philosophy
-- **confucius**: Ren (benevolence), Li (ritual propriety), filial piety, the Junzi (exemplary person), social harmony
-- **buddha**: Four Noble Truths, Noble Eightfold Path, Middle Way, impermanence, no-self, mindfulness, nirvana
-
-### Modern Philosophy
-- **kant**: Categorical imperative, deontological ethics, autonomy, phenomena vs. noumena, "dare to know"
-- **nietzsche**: "God is dead," will to power, Übermensch, eternal recurrence, master/slave morality, amor fati
-- **kierkegaard**: Leap of faith, anxiety, despair, subjectivity as truth, three stages of existence, the individual
-
+${generatePhilosopherToolsList()}
 Each philosopher tool provides:
 - Key teachings and concepts with detailed explanations
 - Links to primary source texts (Project Gutenberg, Internet Archive, Sacred Texts, etc.)
 - Key excerpts from their major works with context
 - Famous quotes and biographical information
 
-## Research Tools
-
-### Information Gathering
-- **webSearch**: General web search for any topic. Start here for broad exploration.
-- **readUrl**: Fetch full content from a specific URL. Use after webSearch to dive deeper into promising sources.
-- **wikipedia**: Search Wikipedia for factual background, definitions, and established knowledge.
-- **newsSearch**: Search recent news. Use for current events, developments, and time-sensitive topics.
-
-### Research Organization
-- **saveNote**: Save important findings under a topic (e.g., "key facts", "statistics", "sources")
-- **recallNotes**: Recall saved notes to review before writing your final answer
-- **clearNotes**: Clear all notes (rarely needed, only for starting completely fresh)
+${generateResearchToolsList()}
 
 # TOOL SELECTION GUIDELINES
 
@@ -190,3 +331,6 @@ User: "How do I deal with anxiety about things I can't control?"
 → Call marcusAurelius: "inner peace and acceptance"
 → Response: [Present the Stoic framework for distinguishing what is "up to us" from what is not, with practical guidance from the Enchiridion and Meditations]
 `;
+}
+
+export const SYSTEM_PROMPT = getSystemPrompt();
