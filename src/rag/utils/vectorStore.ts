@@ -1,17 +1,11 @@
 /**
  * Vector store utility for embedding and querying philosopher texts
- * Uses ChromaDB for vector storage and AI SDK for embeddings
- *
- * Requires ChromaDB server running:
- *   bun run chroma
+ * Uses PostgreSQL with pgvector for vector storage and AI SDK for embeddings
  */
 
-import { ChromaClient, type Collection } from 'chromadb';
 import { embed, embedMany } from 'ai';
 import type { TextChunk } from './chunker';
 import {
-  CHROMA_URL,
-  COLLECTION_NAME,
   DEFAULT_QUERY_LIMIT,
   MIN_RELEVANCE_SCORE,
   ADJACENT_CHUNK_WINDOW,
@@ -19,10 +13,7 @@ import {
 } from '../../constants/rag';
 import { EMBEDDING_MODEL_NAME } from '../../constants/providers';
 import { EMBEDDING_MODEL } from '../../utils/providers';
-
-// Singleton instances
-let chromaClient: ChromaClient | null = null;
-let collection: Collection | null = null;
+import { getPool } from '../../db/connection';
 
 /**
  * Generate embeddings for texts using AI SDK
@@ -57,44 +48,26 @@ async function generateEmbedding(text: string): Promise<number[]> {
 }
 
 /**
- * Parse a URL into host, port, and ssl components for ChromaDB client
+ * Initialize the vector store (verify pgvector extension is enabled)
  */
-function parseChromaUrl(url: string): { host: string; port: number; ssl: boolean } {
-  const parsed = new URL(url);
-  const ssl = parsed.protocol === 'https:';
-  const defaultPort = ssl ? 443 : 8000;
-  const port = parsed.port ? parseInt(parsed.port, 10) : defaultPort;
-  // Include full hostname with protocol prefix stripped
-  const host = parsed.hostname;
-  return { host, port, ssl };
-}
+export async function initVectorStore(): Promise<void> {
+  const pool = getPool();
 
-/**
- * Initialize the ChromaDB client
- */
-export async function initVectorStore(): Promise<{
-  client: ChromaClient;
-  collection: Collection;
-}> {
-  if (chromaClient && collection) {
-    return { client: chromaClient, collection };
+  try {
+    // Verify pgvector extension is enabled
+    const result = await pool.query(
+      "SELECT EXISTS(SELECT 1 FROM pg_extension WHERE extname = 'vector')"
+    );
+
+    if (!result.rows[0]?.exists) {
+      throw new Error(
+        'pgvector extension is not enabled. Run: CREATE EXTENSION vector;'
+      );
+    }
+  } catch (error) {
+    console.error('Failed to initialize vector store:', error);
+    throw error;
   }
-
-  // Initialize ChromaDB client with host, port, and ssl (path is deprecated)
-  const { host, port, ssl } = parseChromaUrl(CHROMA_URL);
-  chromaClient = new ChromaClient({ host, port, ssl });
-
-  // Get or create the collection with cosine similarity (better for text)
-  collection = await chromaClient.getOrCreateCollection({
-    name: COLLECTION_NAME,
-    metadata: {
-      description: 'Philosopher and theologian primary source texts',
-      embeddingModel: EMBEDDING_MODEL_NAME,
-      'hnsw:space': 'cosine', // Use cosine similarity instead of L2 distance
-    },
-  });
-
-  return { client: chromaClient, collection };
 }
 
 /**
@@ -103,35 +76,61 @@ export async function initVectorStore(): Promise<{
 export async function addChunks(chunks: TextChunk[]): Promise<number> {
   if (chunks.length === 0) return 0;
 
-  const { collection } = await initVectorStore();
-
+  await initVectorStore();
+  const pool = getPool();
   let added = 0;
 
   for (let i = 0; i < chunks.length; i += EMBEDDING_BATCH_SIZE) {
     const batch = chunks.slice(i, i + EMBEDDING_BATCH_SIZE);
 
-    const batchIds = batch.map(c => c.id);
-    const batchDocs = batch.map(c => c.content);
-    const batchMeta = batch.map(c => ({
-      philosopher: c.metadata.philosopher,
-      sourceId: c.metadata.sourceId,
-      title: c.metadata.title,
-      chunkIndex: c.metadata.chunkIndex,
-      startChar: c.metadata.startChar ?? 0,
-      endChar: c.metadata.endChar ?? 0,
-    }));
-
     // Generate embeddings using AI SDK
+    const batchDocs = batch.map(c => c.content);
     const batchEmbeddings = await generateEmbeddings(batchDocs);
 
-    await collection.add({
-      ids: batchIds,
-      documents: batchDocs,
-      metadatas: batchMeta,
-      embeddings: batchEmbeddings,
-    });
+    // Insert chunks in a transaction
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
 
-    added += batch.length;
+      for (let j = 0; j < batch.length; j++) {
+        const chunk = batch[j]!;
+        const embedding = batchEmbeddings[j]!;
+
+        await client.query(
+          `INSERT INTO philosopher_text_chunks 
+           (id, content, embedding, philosopher, source_id, title, chunk_index, start_char, end_char)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+           ON CONFLICT (id) DO UPDATE SET
+             content = EXCLUDED.content,
+             embedding = EXCLUDED.embedding,
+             philosopher = EXCLUDED.philosopher,
+             source_id = EXCLUDED.source_id,
+             title = EXCLUDED.title,
+             chunk_index = EXCLUDED.chunk_index,
+             start_char = EXCLUDED.start_char,
+             end_char = EXCLUDED.end_char`,
+          [
+            chunk.id,
+            chunk.content,
+            JSON.stringify(embedding), // pgvector accepts array as JSON string
+            chunk.metadata.philosopher,
+            chunk.metadata.sourceId,
+            chunk.metadata.title,
+            chunk.metadata.chunkIndex,
+            chunk.metadata.startChar ?? 0,
+            chunk.metadata.endChar ?? 0,
+          ]
+        );
+      }
+
+      await client.query('COMMIT');
+      added += batch.length;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
 
     if (chunks.length > EMBEDDING_BATCH_SIZE) {
       console.log(
@@ -174,47 +173,63 @@ export async function queryPassages(
     minScore = MIN_RELEVANCE_SCORE,
   } = options;
 
-  const { collection } = await initVectorStore();
-
-  // Build where clause
-  const whereClause: Record<string, string> = {};
-  if (philosopher) whereClause.philosopher = philosopher;
-  if (sourceId) whereClause.sourceId = sourceId;
+  await initVectorStore();
+  const pool = getPool();
 
   // Generate query embedding
   const queryEmbedding = await generateEmbedding(query);
 
-  // Query the collection
-  const results = await collection.query({
-    queryEmbeddings: [queryEmbedding],
-    nResults: limit,
-    where: Object.keys(whereClause).length > 0 ? whereClause : undefined,
-  });
+  // Build WHERE clause
+  const conditions: string[] = [];
+  const params: unknown[] = [JSON.stringify(queryEmbedding)];
+  let paramIndex = 2;
 
-  // Format results
-  const queryResults: QueryResult[] = [];
-
-  if (results.ids[0]) {
-    for (let i = 0; i < results.ids[0].length; i++) {
-      const distance = results.distances?.[0]?.[i] ?? 1;
-      // For cosine similarity: distance is 1 - similarity, so similarity = 1 - distance
-      // Score ranges from 0 (completely different) to 1 (identical)
-      const score = Math.max(0, 1 - distance);
-
-      if (score >= minScore) {
-        const metadata = results.metadatas?.[0]?.[i] as Record<string, unknown>;
-        queryResults.push({
-          id: results.ids[0][i]!,
-          content: results.documents?.[0]?.[i] ?? '',
-          philosopher: (metadata?.philosopher as string) ?? '',
-          sourceId: (metadata?.sourceId as string) ?? '',
-          title: (metadata?.title as string) ?? '',
-          chunkIndex: (metadata?.chunkIndex as number) ?? 0,
-          relevanceScore: score,
-        });
-      }
-    }
+  if (philosopher) {
+    conditions.push(`philosopher = $${paramIndex}`);
+    params.push(philosopher);
+    paramIndex++;
   }
+
+  if (sourceId) {
+    conditions.push(`source_id = $${paramIndex}`);
+    params.push(sourceId);
+    paramIndex++;
+  }
+
+  const whereClause =
+    conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  // Query using cosine distance (<=> operator)
+  // Cosine distance ranges from 0 (identical) to 2 (opposite)
+  // We convert to similarity score: 1 - (distance / 2) to get 0-1 range
+  const result = await pool.query(
+    `SELECT 
+       id,
+       content,
+       philosopher,
+       source_id,
+       title,
+       chunk_index,
+       1 - (embedding <=> $1::vector) AS relevance_score
+     FROM philosopher_text_chunks
+     ${whereClause}
+     ORDER BY embedding <=> $1::vector
+     LIMIT $${paramIndex}`,
+    [...params, limit]
+  );
+
+  // Filter by minimum score and format results
+  const queryResults: QueryResult[] = result.rows
+    .filter(row => row.relevance_score >= minScore)
+    .map(row => ({
+      id: row.id,
+      content: row.content,
+      philosopher: row.philosopher,
+      sourceId: row.source_id,
+      title: row.title,
+      chunkIndex: row.chunk_index,
+      relevanceScore: row.relevance_score,
+    }));
 
   return queryResults;
 }
@@ -247,49 +262,39 @@ export async function getAdjacentChunks(
   chunkIndex: number,
   window: number = ADJACENT_CHUNK_WINDOW
 ): Promise<QueryResult[]> {
-  const { collection } = await initVectorStore();
+  await initVectorStore();
+  const pool = getPool();
 
   // Calculate which chunk indices to fetch
-  const targetIndices: number[] = [];
-  for (let i = chunkIndex - window; i <= chunkIndex + window; i++) {
-    if (i >= 0 && i !== chunkIndex) {
-      targetIndices.push(i);
-    }
-  }
+  const minIndex = chunkIndex - window;
+  const maxIndex = chunkIndex + window;
 
-  if (targetIndices.length === 0) {
-    return [];
-  }
+  const result = await pool.query(
+    `SELECT 
+       id,
+       content,
+       philosopher,
+       source_id,
+       title,
+       chunk_index
+     FROM philosopher_text_chunks
+     WHERE source_id = $1 
+       AND chunk_index >= $2 
+       AND chunk_index <= $3
+       AND chunk_index != $4
+     ORDER BY chunk_index`,
+    [sourceId, minIndex, maxIndex, chunkIndex]
+  );
 
-  const results: QueryResult[] = [];
-
-  // Fetch each adjacent chunk
-  for (const idx of targetIndices) {
-    const chunkResults = await collection.get({
-      where: {
-        $and: [{ sourceId: { $eq: sourceId } }, { chunkIndex: { $eq: idx } }],
-      },
-      limit: 1,
-    });
-
-    if (chunkResults.ids.length > 0) {
-      const metadata = chunkResults.metadatas?.[0] as Record<string, unknown>;
-      results.push({
-        id: chunkResults.ids[0]!,
-        content: chunkResults.documents?.[0] ?? '',
-        philosopher: (metadata?.philosopher as string) ?? '',
-        sourceId: (metadata?.sourceId as string) ?? '',
-        title: (metadata?.title as string) ?? '',
-        chunkIndex: (metadata?.chunkIndex as number) ?? 0,
-        relevanceScore: 1, // Adjacent chunks have full relevance to context
-      });
-    }
-  }
-
-  // Sort by chunk index for proper reading order
-  results.sort((a, b) => a.chunkIndex - b.chunkIndex);
-
-  return results;
+  return result.rows.map(row => ({
+    id: row.id,
+    content: row.content,
+    philosopher: row.philosopher,
+    sourceId: row.source_id,
+    title: row.title,
+    chunkIndex: row.chunk_index,
+    relevanceScore: 1, // Adjacent chunks have full relevance to context
+  }));
 }
 
 /**
@@ -300,29 +305,34 @@ export async function getPassageWithContext(
   chunkIndex: number,
   contextWindow: number = ADJACENT_CHUNK_WINDOW
 ): Promise<{ main: QueryResult | null; context: QueryResult[] }> {
-  const { collection } = await initVectorStore();
+  await initVectorStore();
+  const pool = getPool();
 
   // Get the main chunk
-  const mainResult = await collection.get({
-    where: {
-      $and: [
-        { sourceId: { $eq: sourceId } },
-        { chunkIndex: { $eq: chunkIndex } },
-      ],
-    },
-    limit: 1,
-  });
+  const mainResult = await pool.query(
+    `SELECT 
+       id,
+       content,
+       philosopher,
+       source_id,
+       title,
+       chunk_index
+     FROM philosopher_text_chunks
+     WHERE source_id = $1 AND chunk_index = $2
+     LIMIT 1`,
+    [sourceId, chunkIndex]
+  );
 
   let main: QueryResult | null = null;
-  if (mainResult.ids.length > 0) {
-    const metadata = mainResult.metadatas?.[0] as Record<string, unknown>;
+  if (mainResult.rows.length > 0) {
+    const row = mainResult.rows[0]!;
     main = {
-      id: mainResult.ids[0]!,
-      content: mainResult.documents?.[0] ?? '',
-      philosopher: (metadata?.philosopher as string) ?? '',
-      sourceId: (metadata?.sourceId as string) ?? '',
-      title: (metadata?.title as string) ?? '',
-      chunkIndex: (metadata?.chunkIndex as number) ?? 0,
+      id: row.id,
+      content: row.content,
+      philosopher: row.philosopher,
+      sourceId: row.source_id,
+      title: row.title,
+      chunkIndex: row.chunk_index,
       relevanceScore: 1,
     };
   }
@@ -341,25 +351,35 @@ export async function getCollectionStats(): Promise<{
   byPhilosopher: Record<string, number>;
   bySource: Record<string, number>;
 }> {
-  const { collection } = await initVectorStore();
+  await initVectorStore();
+  const pool = getPool();
 
-  const allData = await collection.get();
-  const totalChunks = allData.ids.length;
+  // Get total count
+  const totalResult = await pool.query(
+    'SELECT COUNT(*) as count FROM philosopher_text_chunks'
+  );
+  const totalChunks = parseInt(totalResult.rows[0]?.count ?? '0', 10);
 
+  // Get counts by philosopher
+  const philosopherResult = await pool.query(
+    `SELECT philosopher, COUNT(*) as count 
+     FROM philosopher_text_chunks 
+     GROUP BY philosopher`
+  );
   const byPhilosopher: Record<string, number> = {};
+  for (const row of philosopherResult.rows) {
+    byPhilosopher[row.philosopher] = parseInt(row.count, 10);
+  }
+
+  // Get counts by source
+  const sourceResult = await pool.query(
+    `SELECT source_id, COUNT(*) as count 
+     FROM philosopher_text_chunks 
+     GROUP BY source_id`
+  );
   const bySource: Record<string, number> = {};
-
-  for (const meta of allData.metadatas ?? []) {
-    const philosopher = (meta as Record<string, unknown>)
-      ?.philosopher as string;
-    const sourceId = (meta as Record<string, unknown>)?.sourceId as string;
-
-    if (philosopher) {
-      byPhilosopher[philosopher] = (byPhilosopher[philosopher] ?? 0) + 1;
-    }
-    if (sourceId) {
-      bySource[sourceId] = (bySource[sourceId] ?? 0) + 1;
-    }
+  for (const row of sourceResult.rows) {
+    bySource[row.source_id] = parseInt(row.count, 10);
   }
 
   return { totalChunks, byPhilosopher, bySource };
@@ -369,45 +389,41 @@ export async function getCollectionStats(): Promise<{
  * Check if a source is already indexed
  */
 export async function isSourceIndexed(sourceId: string): Promise<boolean> {
-  const { collection } = await initVectorStore();
+  await initVectorStore();
+  const pool = getPool();
 
-  const results = await collection.get({
-    where: { sourceId },
-    limit: 1,
-  });
+  const result = await pool.query(
+    'SELECT EXISTS(SELECT 1 FROM philosopher_text_chunks WHERE source_id = $1)',
+    [sourceId]
+  );
 
-  return results.ids.length > 0;
+  return result.rows[0]?.exists ?? false;
 }
 
 /**
  * Delete chunks for a source
  */
 export async function deleteSource(sourceId: string): Promise<number> {
-  const { collection } = await initVectorStore();
+  await initVectorStore();
+  const pool = getPool();
 
-  const existing = await collection.get({ where: { sourceId } });
-  const count = existing.ids.length;
+  const result = await pool.query(
+    'DELETE FROM philosopher_text_chunks WHERE source_id = $1',
+    [sourceId]
+  );
 
-  if (count > 0) {
-    await collection.delete({ where: { sourceId } });
-  }
-
-  return count;
+  return result.rowCount ?? 0;
 }
 
 /**
  * Clear all chunks
  */
 export async function clearCollection(): Promise<void> {
-  const { client } = await initVectorStore();
+  await initVectorStore();
+  const pool = getPool();
 
-  try {
-    await client.deleteCollection({ name: COLLECTION_NAME });
-    collection = null;
-    console.log('✓ Collection cleared');
-  } catch {
-    console.log('Collection does not exist or already cleared');
-  }
+  await pool.query('TRUNCATE TABLE philosopher_text_chunks');
+  console.log('✓ Collection cleared');
 }
 
 /**

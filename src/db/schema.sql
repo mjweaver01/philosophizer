@@ -4,6 +4,9 @@
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- Enable pgvector extension for vector similarity search
+CREATE EXTENSION IF NOT EXISTS vector;
+
 -- ==========================================================================
 -- Users Table
 -- ==========================================================================
@@ -59,4 +62,70 @@ BEGIN
     AND used_at IS NULL;
 END;
 $$ LANGUAGE 'plpgsql';
+
+-- ==========================================================================
+-- Philosopher Text Chunks Table (RAG System)
+-- ==========================================================================
+CREATE TABLE IF NOT EXISTS philosopher_text_chunks (
+    id VARCHAR(255) PRIMARY KEY,
+    content TEXT NOT NULL,
+    embedding vector(768) NOT NULL, -- nomic-embed-text produces 768-dimensional vectors
+    philosopher VARCHAR(255) NOT NULL,
+    source_id VARCHAR(255) NOT NULL,
+    title TEXT NOT NULL,
+    chunk_index INTEGER NOT NULL,
+    start_char INTEGER DEFAULT 0,
+    end_char INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_philosopher_text_chunks_philosopher ON philosopher_text_chunks(philosopher);
+CREATE INDEX IF NOT EXISTS idx_philosopher_text_chunks_source_id ON philosopher_text_chunks(source_id);
+CREATE INDEX IF NOT EXISTS idx_philosopher_text_chunks_chunk_index ON philosopher_text_chunks(chunk_index);
+
+-- Vector similarity index using HNSW for fast approximate nearest neighbor search
+-- Using cosine distance for semantic similarity
+CREATE INDEX IF NOT EXISTS idx_philosopher_text_chunks_embedding ON philosopher_text_chunks 
+USING hnsw (embedding vector_cosine_ops);
+
+-- ==========================================================================
+-- Conversations Table (with semantic search support)
+-- ==========================================================================
+CREATE TABLE IF NOT EXISTS conversations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    embedding vector(768), -- Embedding of title + conversation content for semantic search
+    content_preview TEXT, -- First 500 chars of conversation for quick preview
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_conversations_user_id ON conversations(user_id);
+CREATE INDEX IF NOT EXISTS idx_conversations_updated_at ON conversations(updated_at DESC);
+
+-- Vector similarity index for conversation semantic search
+CREATE INDEX IF NOT EXISTS idx_conversations_embedding ON conversations 
+USING hnsw (embedding vector_cosine_ops);
+
+-- ==========================================================================
+-- Conversation Messages Table
+-- ==========================================================================
+CREATE TABLE IF NOT EXISTS conversation_messages (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+    role VARCHAR(20) NOT NULL CHECK (role IN ('user', 'assistant')),
+    content TEXT NOT NULL,
+    parts JSONB, -- Store additional message parts as JSON
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_conversation_messages_conversation_id ON conversation_messages(conversation_id);
+CREATE INDEX IF NOT EXISTS idx_conversation_messages_created_at ON conversation_messages(created_at);
+
+-- ==========================================================================
+-- Additional Triggers
+-- ==========================================================================
+CREATE TRIGGER update_conversations_updated_at BEFORE UPDATE ON conversations
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 

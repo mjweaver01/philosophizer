@@ -1,0 +1,44 @@
+# PostgreSQL with pgvector and pre-loaded Philosophizer data
+# 
+# Build:
+#   ./scripts/backup-pgvector.sh                    # First, create the backup
+#   ./scripts/publish-pgvector.sh mjweaver01/philosophizer-pgvector:latest
+#
+# Or manually:
+#   docker build -f Dockerfile.pgvector -t mjweaver01/philosophizer-pgvector:latest .
+#   docker push mjweaver01/philosophizer-pgvector:latest
+#
+# Use in production:
+#   Update docker-compose.yml to use this image instead of pgvector/pgvector:pg16
+
+FROM pgvector/pgvector:pg16
+
+# Set environment variables for automatic initialization
+ENV POSTGRES_DB=philosophizer
+ENV POSTGRES_USER=postgres
+ENV POSTGRES_PASSWORD=postgres
+
+# Copy the database schema (will be run on first startup)
+COPY src/db/schema.sql /docker-entrypoint-initdb.d/01-schema.sql
+
+# Copy the pre-loaded vector data (will be run after schema)
+COPY pgvector-backup.sql /docker-entrypoint-initdb.d/02-data.sql
+
+# Add a script to verify data on startup
+RUN echo '#!/bin/bash\n\
+set -e\n\
+echo ""\n\
+echo "🔍 Verifying pre-loaded vector data..."\n\
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL\n\
+  SELECT \n\
+    '\''✅ Vector data loaded successfully!'\'' as status,\n\
+    COUNT(*) as total_chunks,\n\
+    COUNT(DISTINCT philosopher) as philosophers\n\
+  FROM philosopher_text_chunks;\n\
+EOSQL\n\
+echo ""' > /docker-entrypoint-initdb.d/03-verify.sh \
+  && chmod +x /docker-entrypoint-initdb.d/03-verify.sh
+
+# The base image already has the correct CMD and EXPOSE
+# Data directory is /var/lib/postgresql/data
+

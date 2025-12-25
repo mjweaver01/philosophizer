@@ -1,8 +1,7 @@
-import { ChromaClient, type Collection } from 'chromadb';
 import { embed } from 'ai';
 import { v4 as uuid } from 'uuid';
-import { CHROMA_URL } from '../constants/rag';
 import { EMBEDDING_MODEL } from './providers';
+import { getPool } from '../db/connection';
 
 export interface ConversationMessage {
   id: string;
@@ -27,53 +26,6 @@ export interface ConversationSearchResult {
   content: string;
   relevanceScore: number;
   updatedAt: string;
-}
-
-const CONVERSATIONS_COLLECTION = 'conversations';
-
-// Singleton instances
-let chromaClient: ChromaClient | null = null;
-let conversationsCollection: Collection | null = null;
-
-/**
- * Parse a URL into host, port, and ssl components for ChromaDB client
- */
-function parseChromaUrl(url: string): {
-  host: string;
-  port: number;
-  ssl: boolean;
-} {
-  const parsed = new URL(url);
-  const ssl = parsed.protocol === 'https:';
-  const defaultPort = ssl ? 443 : 8000;
-  const port = parsed.port ? parseInt(parsed.port, 10) : defaultPort;
-  const host = parsed.hostname;
-  return { host, port, ssl };
-}
-
-/**
- * Initialize the ChromaDB client and conversations collection
- */
-async function initConversationsStore(): Promise<Collection> {
-  if (conversationsCollection) {
-    return conversationsCollection;
-  }
-
-  if (!chromaClient) {
-    const { host, port, ssl } = parseChromaUrl(CHROMA_URL);
-    chromaClient = new ChromaClient({ host, port, ssl });
-  }
-
-  // Get or create the conversations collection with cosine similarity
-  conversationsCollection = await chromaClient.getOrCreateCollection({
-    name: CONVERSATIONS_COLLECTION,
-    metadata: {
-      description: 'Chat conversation history with semantic search',
-      'hnsw:space': 'cosine',
-    },
-  });
-
-  return conversationsCollection;
 }
 
 /**
@@ -112,13 +64,22 @@ export async function createConversation(
   userId: string,
   title?: string
 ): Promise<Conversation> {
-  const collection = await initConversationsStore();
+  const pool = getPool();
 
   const id = uuid();
   const now = new Date().toISOString();
   const conversationTitle = title || 'New Conversation';
 
-  const conversation: Conversation = {
+  // Generate embedding for the title
+  const embedding = await generateEmbedding(conversationTitle);
+
+  await pool.query(
+    `INSERT INTO conversations (id, user_id, title, embedding, content_preview, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    [id, userId, conversationTitle, JSON.stringify(embedding), '', now, now]
+  );
+
+  return {
     id,
     userId,
     title: conversationTitle,
@@ -126,26 +87,6 @@ export async function createConversation(
     updatedAt: now,
     messages: [],
   };
-
-  // Generate embedding for empty conversation (will be updated when messages are added)
-  const embedding = await generateEmbedding(conversationTitle);
-
-  await collection.add({
-    ids: [id],
-    documents: [JSON.stringify(conversation.messages)],
-    embeddings: [embedding],
-    metadatas: [
-      {
-        userId,
-        title: conversationTitle,
-        createdAt: now,
-        updatedAt: now,
-        contentPreview: '',
-      },
-    ],
-  });
-
-  return conversation;
 }
 
 /**
@@ -155,33 +96,50 @@ export async function getConversation(
   id: string,
   userId?: string
 ): Promise<Conversation | null> {
-  const collection = await initConversationsStore();
+  const pool = getPool();
 
-  const result = await collection.get({
-    ids: [id],
-  });
+  const conversationResult = await pool.query(
+    `SELECT id, user_id, title, created_at, updated_at
+     FROM conversations
+     WHERE id = $1`,
+    [id]
+  );
 
-  if (!result.ids.length || !result.metadatas?.[0]) {
+  if (conversationResult.rows.length === 0) {
     return null;
   }
 
-  const metadata = result.metadatas[0] as Record<string, unknown>;
-  const conversationUserId = metadata.userId as string;
+  const row = conversationResult.rows[0]!;
 
   // If userId is provided, check ownership
-  if (userId && conversationUserId !== userId) {
+  if (userId && row.user_id !== userId) {
     return null;
   }
 
-  const messagesJson = result.documents?.[0] || '[]';
+  // Get messages for this conversation
+  const messagesResult = await pool.query(
+    `SELECT id, role, content, parts, created_at
+     FROM conversation_messages
+     WHERE conversation_id = $1
+     ORDER BY created_at ASC`,
+    [id]
+  );
+
+  const messages: ConversationMessage[] = messagesResult.rows.map(msgRow => ({
+    id: msgRow.id,
+    role: msgRow.role,
+    content: msgRow.content,
+    timestamp: msgRow.created_at,
+    parts: msgRow.parts,
+  }));
 
   return {
-    id,
-    userId: conversationUserId,
-    title: (metadata.title as string) || 'Untitled',
-    createdAt: (metadata.createdAt as string) || new Date().toISOString(),
-    updatedAt: (metadata.updatedAt as string) || new Date().toISOString(),
-    messages: JSON.parse(messagesJson),
+    id: row.id,
+    userId: row.user_id,
+    title: row.title,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    messages,
   };
 }
 
@@ -191,34 +149,23 @@ export async function getConversation(
 export async function listConversations(
   userId: string
 ): Promise<Omit<Conversation, 'messages'>[]> {
-  const collection = await initConversationsStore();
+  const pool = getPool();
 
-  const result = await collection.get();
-
-  const conversations: Omit<Conversation, 'messages'>[] = [];
-
-  for (let i = 0; i < result.ids.length; i++) {
-    const id = result.ids[i];
-    const metadata = result.metadatas?.[i] as Record<string, unknown>;
-
-    // Filter by userId
-    if (id && metadata && metadata.userId === userId) {
-      conversations.push({
-        id,
-        userId: metadata.userId as string,
-        title: (metadata.title as string) || 'Untitled',
-        createdAt: (metadata.createdAt as string) || new Date().toISOString(),
-        updatedAt: (metadata.updatedAt as string) || new Date().toISOString(),
-      });
-    }
-  }
-
-  // Sort by updatedAt descending
-  conversations.sort(
-    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+  const result = await pool.query(
+    `SELECT id, user_id, title, created_at, updated_at
+     FROM conversations
+     WHERE user_id = $1
+     ORDER BY updated_at DESC`,
+    [userId]
   );
 
-  return conversations;
+  return result.rows.map(row => ({
+    id: row.id,
+    userId: row.user_id,
+    title: row.title,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }));
 }
 
 /**
@@ -230,50 +177,50 @@ export async function searchConversations(
   limit: number = 5,
   excludeConversationId?: string
 ): Promise<ConversationSearchResult[]> {
-  const collection = await initConversationsStore();
+  const pool = getPool();
 
   // Generate query embedding
   const queryEmbedding = await generateEmbedding(query);
 
-  // Search for similar conversations
-  const results = await collection.query({
-    queryEmbeddings: [queryEmbedding],
-    nResults: limit + 50, // Get more results to filter by userId
-    where: { userId },
-  });
+  // Build WHERE clause
+  const conditions = ['user_id = $2'];
+  const params: unknown[] = [JSON.stringify(queryEmbedding), userId];
+  let paramIndex = 3;
 
-  const searchResults: ConversationSearchResult[] = [];
-
-  if (results.ids[0]) {
-    for (let i = 0; i < results.ids[0].length; i++) {
-      const id = results.ids[0][i];
-
-      // Skip the current conversation if specified
-      if (id === excludeConversationId) continue;
-
-      const metadata = results.metadatas?.[0]?.[i] as Record<string, unknown>;
-
-      // Additional check for userId
-      if (metadata.userId !== userId) continue;
-
-      const distance = results.distances?.[0]?.[i] ?? 1;
-      // Cosine similarity: score = 1 - distance
-      const score = Math.max(0, 1 - distance);
-
-      if (id && metadata && score > 0.3) {
-        // Only include if relevance > 30%
-        searchResults.push({
-          id,
-          title: (metadata.title as string) || 'Untitled',
-          content: (metadata.contentPreview as string) || '',
-          relevanceScore: score,
-          updatedAt: (metadata.updatedAt as string) || new Date().toISOString(),
-        });
-      }
-    }
+  if (excludeConversationId) {
+    conditions.push(`id != $${paramIndex}`);
+    params.push(excludeConversationId);
+    paramIndex++;
   }
 
-  return searchResults.slice(0, limit);
+  const whereClause = conditions.join(' AND ');
+
+  // Search for similar conversations using cosine distance
+  const result = await pool.query(
+    `SELECT 
+       id,
+       title,
+       content_preview,
+       updated_at,
+       1 - (embedding <=> $1::vector) AS relevance_score
+     FROM conversations
+     WHERE ${whereClause}
+       AND embedding IS NOT NULL
+     ORDER BY embedding <=> $1::vector
+     LIMIT $${paramIndex}`,
+    [...params, limit]
+  );
+
+  // Filter by minimum relevance score (30%)
+  return result.rows
+    .filter(row => row.relevance_score >= 0.3)
+    .map(row => ({
+      id: row.id,
+      title: row.title,
+      content: row.content_preview || '',
+      relevanceScore: row.relevance_score,
+      updatedAt: row.updated_at,
+    }));
 }
 
 /**
@@ -284,7 +231,7 @@ export async function updateConversation(
   userId: string,
   updates: { title?: string }
 ): Promise<Conversation | null> {
-  const collection = await initConversationsStore();
+  const pool = getPool();
 
   const existing = await getConversation(id, userId);
   if (!existing) return null;
@@ -297,19 +244,19 @@ export async function updateConversation(
   const textForEmbedding = `${newTitle}\n\n${content}`;
   const embedding = await generateEmbedding(textForEmbedding);
 
-  await collection.update({
-    ids: [id],
-    embeddings: [embedding],
-    metadatas: [
-      {
-        userId,
-        title: newTitle,
-        createdAt: existing.createdAt,
-        updatedAt: now,
-        contentPreview: content.slice(0, 500),
-      },
-    ],
-  });
+  await pool.query(
+    `UPDATE conversations
+     SET title = $1, embedding = $2, content_preview = $3, updated_at = $4
+     WHERE id = $5 AND user_id = $6`,
+    [
+      newTitle,
+      JSON.stringify(embedding),
+      content.slice(0, 500),
+      now,
+      id,
+      userId,
+    ]
+  );
 
   return getConversation(id, userId);
 }
@@ -325,22 +272,56 @@ export async function addMessage(
   const conversation = await getConversation(conversationId, userId);
   if (!conversation) return null;
 
-  const id = uuid();
+  const pool = getPool();
+  const messageId = uuid();
   const timestamp = new Date().toISOString();
 
-  const newMessage: ConversationMessage = {
-    id,
+  // Insert the message
+  await pool.query(
+    `INSERT INTO conversation_messages (id, conversation_id, role, content, parts, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [
+      messageId,
+      conversationId,
+      message.role,
+      message.content,
+      message.parts ? JSON.stringify(message.parts) : null,
+      timestamp,
+    ]
+  );
+
+  // Update conversation embedding and timestamp
+  conversation.messages.push({
+    id: messageId,
+    role: message.role,
+    content: message.content,
+    timestamp,
+    parts: message.parts,
+  });
+
+  const content = getConversationContent(conversation.messages);
+  const textForEmbedding = `${conversation.title}\n\n${content}`;
+  const embedding = await generateEmbedding(textForEmbedding);
+
+  await pool.query(
+    `UPDATE conversations
+     SET embedding = $1, content_preview = $2, updated_at = $3
+     WHERE id = $4`,
+    [
+      JSON.stringify(embedding),
+      content.slice(0, 500),
+      timestamp,
+      conversationId,
+    ]
+  );
+
+  return {
+    id: messageId,
     role: message.role,
     content: message.content,
     timestamp,
     parts: message.parts,
   };
-
-  conversation.messages.push(newMessage);
-
-  await saveMessages(conversationId, userId, conversation.messages);
-
-  return newMessage;
 }
 
 /**
@@ -351,34 +332,58 @@ export async function saveMessages(
   userId: string,
   messages: ConversationMessage[]
 ): Promise<boolean> {
-  const collection = await initConversationsStore();
-
   const existing = await getConversation(conversationId, userId);
   if (!existing) return false;
 
-  const now = new Date().toISOString();
+  const pool = getPool();
+  const client = await pool.connect();
 
-  // Generate embedding from conversation content
-  const content = getConversationContent(messages);
-  const textForEmbedding = `${existing.title}\n\n${content}`;
-  const embedding = await generateEmbedding(textForEmbedding);
+  try {
+    await client.query('BEGIN');
 
-  await collection.update({
-    ids: [conversationId],
-    documents: [JSON.stringify(messages)],
-    embeddings: [embedding],
-    metadatas: [
-      {
-        userId,
-        title: existing.title,
-        createdAt: existing.createdAt,
-        updatedAt: now,
-        contentPreview: content.slice(0, 500),
-      },
-    ],
-  });
+    // Delete existing messages
+    await client.query(
+      'DELETE FROM conversation_messages WHERE conversation_id = $1',
+      [conversationId]
+    );
 
-  return true;
+    // Insert new messages
+    for (const message of messages) {
+      await client.query(
+        `INSERT INTO conversation_messages (id, conversation_id, role, content, parts, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [
+          message.id,
+          conversationId,
+          message.role,
+          message.content,
+          message.parts ? JSON.stringify(message.parts) : null,
+          message.timestamp,
+        ]
+      );
+    }
+
+    // Update conversation embedding
+    const content = getConversationContent(messages);
+    const textForEmbedding = `${existing.title}\n\n${content}`;
+    const embedding = await generateEmbedding(textForEmbedding);
+    const now = new Date().toISOString();
+
+    await client.query(
+      `UPDATE conversations
+       SET embedding = $1, content_preview = $2, updated_at = $3
+       WHERE id = $4`,
+      [JSON.stringify(embedding), content.slice(0, 500), now, conversationId]
+    );
+
+    await client.query('COMMIT');
+    return true;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 /**
@@ -388,14 +393,16 @@ export async function deleteConversation(
   id: string,
   userId: string
 ): Promise<boolean> {
-  const collection = await initConversationsStore();
-
   const existing = await getConversation(id, userId);
   if (!existing) return false;
 
-  await collection.delete({
-    ids: [id],
-  });
+  const pool = getPool();
+
+  // Messages will be cascade deleted due to foreign key constraint
+  await pool.query('DELETE FROM conversations WHERE id = $1 AND user_id = $2', [
+    id,
+    userId,
+  ]);
 
   return true;
 }

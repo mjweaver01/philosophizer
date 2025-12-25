@@ -5,3 +5,4 @@ node_modules/
 dist/
 src/rag/texts
 chroma-backup.tar.gz
+pgvector-backup*.sql

@@ -150,7 +150,7 @@ export function ChatPage() {
   // Convert useChat messages to conversation format for saving
   const convertMessagesForSaving = useCallback(() => {
     return messages.map(msg => ({
-      id: msg.id,
+      id: crypto.randomUUID(), // AI SDK uses non-UUID IDs, generate UUID for database
       role: msg.role as 'user' | 'assistant',
       content:
         msg.parts

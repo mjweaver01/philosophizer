@@ -46,7 +46,7 @@ export const philosophersEndpoint = {
       try {
         stats = await getCollectionStats();
       } catch {
-        // ChromaDB might not be available
+        // Vector store might not be available
       }
 
       const philosophers: PhilosopherSummary[] = philosopherIds.map(id => {
@@ -145,7 +145,7 @@ export const philosopherDetailEndpoint = {
       try {
         stats = await getCollectionStats();
       } catch {
-        // ChromaDB might not be available
+        // Vector store might not be available
       }
 
       // Add indexing status to text sources

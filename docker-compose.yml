@@ -11,18 +11,16 @@
 #   2. docker compose up -d
 #   3. Wait for ollama to download the model (check logs: docker compose logs -f ollama)
 #   4. PostgreSQL schema will be automatically initialized
-#
-# To update ChromaDB data:
-#   1. bun run chroma:bp           # Backup and publish new image
-#   2. docker compose pull chroma  # Pull the updated image
-#   3. docker compose up -d        # Restart with new data
+#   5. Index philosopher texts: docker compose exec app bun run rag:index
 
 services:
   # ==========================================================================
-  # PostgreSQL Database
+  # PostgreSQL Database with pgvector
   # ==========================================================================
+  # Use base image for local development, or use pre-loaded image for production:
+  #   image: mjweaver01/philosophizer-pgvector:latest
   postgres:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     container_name: philosophizer-postgres
     restart: unless-stopped
     ports:
@@ -72,19 +70,6 @@ services:
     restart: "no"
 
   # ==========================================================================
-  # ChromaDB Vector Database (with pre-baked data)
-  # ==========================================================================
-  chroma:
-    image: mjweaver01/philosophizer:latest
-    container_name: philosophizer-chroma
-    restart: unless-stopped
-    ports:
-      - "${CHROMA_PORT:-8000}:8000"
-    environment:
-      - IS_PERSISTENT=TRUE
-      - ANONYMIZED_TELEMETRY=FALSE
-
-  # ==========================================================================
   # Philosophizer Application
   # ==========================================================================
   app:
@@ -103,8 +88,6 @@ services:
       # JWT Configuration
       - JWT_SECRET=${JWT_SECRET:-change-this-in-production}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
-      # ChromaDB connection (internal Docker network)
-      - CHROMA_URL=http://chroma:8000
       # LLM (chat) provider configuration
       - AI_BASE_URL=${AI_BASE_URL:-https://api.openai.com/v1}
       - LLM_MODEL=${LLM_MODEL:-gpt-4.1}
@@ -119,8 +102,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      chroma:
-        condition: service_started
       ollama:
         condition: service_healthy
     extra_hosts:
