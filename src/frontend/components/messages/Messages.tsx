@@ -13,6 +13,7 @@ interface MessagesProps {
   status: string;
   starterQuestions: string[];
   onStarterQuestion: (question: string) => void;
+  onRegenerateLastMessage?: () => void;
 }
 
 // Helper function to check if we should show the thinking indicator
@@ -88,6 +89,7 @@ export function Messages({
   status,
   starterQuestions,
   onStarterQuestion,
+  onRegenerateLastMessage,
 }: MessagesProps) {
   return (
     <>
@@ -98,25 +100,35 @@ export function Messages({
         />
       )}
 
-      {messages.map((message, index) => (
-        <div
-          key={message.id}
-          className={`py-8 ${index === messages.length - 1 ? 'pb-12' : ''}`}
-        >
-          <div className="max-w-3xl mx-auto">
-            <div className="flex gap-4">
-              <MessageAvatar role={message.role} />
-              <div className="flex-1 min-w-0">
-                {message.role === 'user' ? (
-                  <UserMessage message={message} />
-                ) : (
-                  <AssistantMessage message={message} />
-                )}
+      {messages.map((message, index) => {
+        const isLastMessage = index === messages.length - 1;
+        const isLastAssistantMessage =
+          isLastMessage && message.role === 'assistant';
+
+        return (
+          <div
+            key={message.id}
+            className={`py-8 ${index === messages.length - 1 ? 'pb-12' : ''}`}
+          >
+            <div className="max-w-3xl mx-auto">
+              <div className="flex gap-4">
+                <MessageAvatar role={message.role} />
+                <div className="flex-1 min-w-0">
+                  {message.role === 'user' ? (
+                    <UserMessage message={message} />
+                  ) : (
+                    <AssistantMessage
+                      message={message}
+                      showActions={isLastAssistantMessage}
+                      onRegenerateLastMessage={onRegenerateLastMessage}
+                    />
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
 
       {shouldShowThinkingIndicator(status, messages) && <ThinkingIndicator />}
     </>

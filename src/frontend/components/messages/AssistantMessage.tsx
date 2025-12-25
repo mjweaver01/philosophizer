@@ -7,12 +7,33 @@ import {
   extractToolName,
   isToolCallPart,
 } from '../../../utils/textProcessing';
+import { MessageActions } from './MessageActions';
 
 interface AssistantMessageProps {
   message: any;
+  showActions?: boolean;
+  onRegenerateLastMessage?: () => void;
 }
 
-export function AssistantMessage({ message }: AssistantMessageProps) {
+export function AssistantMessage({
+  message,
+  showActions = false,
+  onRegenerateLastMessage,
+}: AssistantMessageProps) {
+  // Helper to extract text content from message
+  const getTextContent = (): string => {
+    if ('parts' in message && Array.isArray(message.parts)) {
+      return message.parts
+        .filter((part: any) => part.type === 'text')
+        .map((part: any) => part.text)
+        .join('\n');
+    }
+    if (message.content) {
+      return message.content;
+    }
+    return '';
+  };
+
   // Handle parts-based messages
   if ('parts' in message && Array.isArray(message.parts)) {
     return (
@@ -20,13 +41,29 @@ export function AssistantMessage({ message }: AssistantMessageProps) {
         {message.parts.map((part: any, index: number) => (
           <MessagePart key={`part-${index}`} part={part} index={index} />
         ))}
+        {showActions && (
+          <MessageActions
+            onRegenerate={onRegenerateLastMessage}
+            textContent={getTextContent()}
+          />
+        )}
       </>
     );
   }
 
   // Handle simple content-based messages
   if (message.content) {
-    return <MarkdownRenderer content={message.content} />;
+    return (
+      <>
+        <MarkdownRenderer content={message.content} />
+        {showActions && (
+          <MessageActions
+            onRegenerate={onRegenerateLastMessage}
+            textContent={getTextContent()}
+          />
+        )}
+      </>
+    );
   }
 
   return null;
