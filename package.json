@@ -16,7 +16,7 @@
     "postgres:reset": "docker compose stop postgres && docker volume rm philosophizer_postgres-data && bun run db:setup",
     "pgvector:backup": "./scripts/backup-pgvector.sh",
     "pgvector:restore": "./scripts/restore-pgvector.sh",
-    "pgvector:publish": "./scripts/publish-pgvector.sh",
+    "pgvector:publish": "./scripts/publish-pgvector.sh mjweaver01/philosophizer-pgvector",
     "pgvector:bp": "bun run pgvector:backup && bun run pgvector:publish",
     "rag:index": "bun run src/rag/scripts/indexTexts.ts",
     "rag:clear": "bun run src/rag/scripts/indexTexts.ts --clear"
