@@ -51,13 +51,23 @@ CHUNK_COUNT=$(grep -c "INSERT INTO philosopher_text_chunks" "$BACKUP_FILE" || ec
 echo "📊 Text chunks: $CHUNK_COUNT"
 echo ""
 
-# Build the Docker image
+# Build the Docker image for multiple platforms
 echo "🔨 Building Docker image: $IMAGE_NAME"
+echo "   Platforms: linux/amd64, linux/arm64"
 echo ""
 
-docker build \
+# Create buildx builder if it doesn't exist
+if ! docker buildx inspect philosophizer-builder &> /dev/null; then
+  echo "📦 Creating multi-platform builder..."
+  docker buildx create --name philosophizer-builder --use
+fi
+
+# Build and push for multiple platforms
+docker buildx build \
+  --platform linux/amd64,linux/arm64 \
   -f Dockerfile.pgvector \
   -t "$IMAGE_NAME" \
+  --push \
   "$PROJECT_ROOT"
 
 if [ $? -ne 0 ]; then
@@ -66,48 +76,23 @@ if [ $? -ne 0 ]; then
 fi
 
 echo ""
-echo "✅ Build complete!"
+echo "✅ Build and push complete!"
+echo ""
+echo "📦 Image: $IMAGE_NAME"
+echo "   Platforms: linux/amd64, linux/arm64"
 echo ""
 
-# Get image size
-IMAGE_SIZE=$(docker images "$IMAGE_NAME" --format "{{.Size}}")
-echo "📦 Image size: $IMAGE_SIZE"
+echo "✅ Image published successfully!"
 echo ""
-
-# Offer to push to registry
-read -p "Push to Docker registry? (y/N) " -n 1 -r
+echo "🎯 To use in Railway:"
+echo "   1. Create new service → Docker Image"
+echo "   2. Image: $IMAGE_NAME"
+echo "   3. Set POSTGRES_PASSWORD environment variable"
 echo ""
-
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-  echo ""
-  echo "🚀 Pushing to Docker registry..."
-  docker push "$IMAGE_NAME"
-  
-  if [ $? -ne 0 ]; then
-    echo "❌ Push failed. Make sure you're logged in:"
-    echo "   docker login"
-    exit 1
-  fi
-  
-  echo ""
-  echo "✅ Image published successfully!"
-  echo ""
-  echo "🎯 To use this image:"
-  echo ""
-  echo "1. Update docker-compose.yml:"
-  echo "   postgres:"
-  echo "     image: $IMAGE_NAME"
-  echo ""
-  echo "2. Pull and run:"
-  echo "   docker compose pull postgres"
-  echo "   docker compose up -d"
-  echo ""
-else
-  echo ""
-  echo "✅ Image built locally. To push later:"
-  echo "   docker push $IMAGE_NAME"
-  echo ""
-fi
-
+echo "🎯 To use locally:"
+echo "   docker run -d -p 5432:5432 \\"
+echo "     -e POSTGRES_PASSWORD=postgres \\"
+echo "     $IMAGE_NAME"
+echo ""
 echo "🎉 Done!"
 
