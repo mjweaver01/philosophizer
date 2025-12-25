@@ -23,7 +23,7 @@ echo "======================================"
 echo ""
 
 # Check if PostgreSQL container is running
-if ! docker compose ps postgres | grep -q "running"; then
+if ! docker compose ps postgres | grep -q "Up"; then
   echo "❌ Error: PostgreSQL container is not running"
   echo "   Run: docker compose up -d postgres"
   exit 1
@@ -52,8 +52,6 @@ echo "💾 Creating backup..."
 docker compose exec -T postgres pg_dump \
   -U "$DB_USER" \
   -d "$DB_NAME" \
-  --clean \
-  --if-exists \
   --table=philosopher_text_chunks \
   --data-only \
   --column-inserts \
