@@ -3,18 +3,24 @@ import { readUrl } from './readUrl';
 import { wikipedia } from './wikipedia';
 import { newsSearch } from './newsSearch';
 import { saveNote, recallNotes, clearNotes } from './notes';
-import { recallMemories, getMemoryDetails } from './memories';
+import { createMemoryTools } from './memories';
 import { philosopherTools } from './philosophers';
 
-export const tools = {
-  webSearch,
-  readUrl,
-  wikipedia,
-  newsSearch,
-  saveNote,
-  recallNotes,
-  clearNotes,
-  recallMemories,
-  getMemoryDetails,
-  ...philosopherTools,
-};
+/**
+ * Create tools with user context
+ */
+export function createTools(userId: string) {
+  const memoryTools = createMemoryTools(userId);
+
+  return {
+    webSearch,
+    readUrl,
+    wikipedia,
+    newsSearch,
+    saveNote,
+    recallNotes,
+    clearNotes,
+    ...memoryTools,
+    ...philosopherTools,
+  };
+}

@@ -1,7 +1,7 @@
 import { ToolLoopAgent, stepCountIs, type UIMessage } from 'ai';
 import { LLM_MODEL } from '../constants/providers';
 import { getSystemPrompt } from '../constants/prompts';
-import { tools } from '../tools';
+import { createTools } from '../tools';
 import { createProvider } from './providers';
 import { searchConversations, type ConversationMessage } from './conversations';
 
@@ -17,6 +17,7 @@ function extractTextContent(message: UIMessage): string {
 }
 
 async function getRelevantMemoryContext(
+  userId: string,
   messages: UIMessage[],
   conversationId?: string
 ): Promise<string> {
@@ -32,19 +33,15 @@ async function getRelevantMemoryContext(
   if (!query.trim()) return '';
 
   try {
-    const results = await searchConversations(query, 3);
+    const results = await searchConversations(userId, query, 3, conversationId);
 
-    const relevantConversations = results.filter(result =>
-      conversationId ? result.id !== conversationId : true
-    );
-
-    if (relevantConversations.length === 0) return '';
+    if (results.length === 0) return '';
 
     let context = '\n\n# RELEVANT PAST CONVERSATIONS\n\n';
     context +=
       'You may reference these past discussions if relevant to the current query:\n\n';
 
-    for (const result of relevantConversations) {
+    for (const result of results) {
       const date = new Date(result.updatedAt).toLocaleDateString();
       context += `**Past conversation** (${date}, ${(result.relevanceScore * 100).toFixed(0)}% relevant):\n`;
       context += `"${result.title}"\n`;
@@ -60,16 +57,19 @@ async function getRelevantMemoryContext(
 
 export async function createAgent(
   messages: UIMessage[],
+  userId: string,
   conversationId?: string
 ) {
   const provider = createProvider();
 
   const memoryContext = await getRelevantMemoryContext(
+    userId,
     messages,
     conversationId
   );
 
   const systemPrompt = getSystemPrompt() + memoryContext;
+  const tools = createTools(userId);
 
   return new ToolLoopAgent({
     model: provider.chat(LLM_MODEL),

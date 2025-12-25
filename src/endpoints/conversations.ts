@@ -7,6 +7,7 @@ import {
   saveMessages,
   type ConversationMessage,
 } from '../utils/conversations';
+import { requireAuth } from '../middleware/auth';
 
 /**
  * Conversations endpoint
@@ -15,9 +16,13 @@ import {
  * POST /conversations         - Create a new conversation
  */
 export const conversations = {
-  GET: async (_req: Request) => {
+  GET: async (req: Request) => {
     try {
-      const convos = await listConversations();
+      const authResult = await requireAuth(req);
+      if (authResult instanceof Response) return authResult;
+      const { user } = authResult;
+
+      const convos = await listConversations(user.id);
       return new Response(JSON.stringify(convos), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -39,8 +44,12 @@ export const conversations = {
 
   POST: async (req: Request) => {
     try {
+      const authResult = await requireAuth(req);
+      if (authResult instanceof Response) return authResult;
+      const { user } = authResult;
+
       const body = (await req.json()) as { title?: string };
-      const conversation = await createConversation(body.title);
+      const conversation = await createConversation(user.id, body.title);
 
       return new Response(JSON.stringify(conversation), {
         status: 201,
@@ -72,6 +81,10 @@ export const conversations = {
 export const conversation = {
   GET: async (req: Request) => {
     try {
+      const authResult = await requireAuth(req);
+      if (authResult instanceof Response) return authResult;
+      const { user } = authResult;
+
       const url = new URL(req.url);
       const id = url.pathname.split('/').pop();
 
@@ -85,7 +98,7 @@ export const conversation = {
         );
       }
 
-      const conv = await getConversation(id);
+      const conv = await getConversation(id, user.id);
 
       if (!conv) {
         return new Response(
@@ -118,6 +131,10 @@ export const conversation = {
 
   PUT: async (req: Request) => {
     try {
+      const authResult = await requireAuth(req);
+      if (authResult instanceof Response) return authResult;
+      const { user } = authResult;
+
       const url = new URL(req.url);
       const id = url.pathname.split('/').pop();
 
@@ -138,7 +155,7 @@ export const conversation = {
 
       // If messages are provided, save them
       if (body.messages) {
-        const success = await saveMessages(id, body.messages);
+        const success = await saveMessages(id, user.id, body.messages);
         if (!success) {
           return new Response(
             JSON.stringify({ error: 'Conversation not found' }),
@@ -152,7 +169,9 @@ export const conversation = {
 
       // If title is provided, update it
       if (body.title) {
-        const updated = await updateConversation(id, { title: body.title });
+        const updated = await updateConversation(id, user.id, {
+          title: body.title,
+        });
         if (!updated) {
           return new Response(
             JSON.stringify({ error: 'Conversation not found' }),
@@ -164,7 +183,7 @@ export const conversation = {
         }
       }
 
-      const conv = await getConversation(id);
+      const conv = await getConversation(id, user.id);
       return new Response(JSON.stringify(conv), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -186,6 +205,10 @@ export const conversation = {
 
   DELETE: async (req: Request) => {
     try {
+      const authResult = await requireAuth(req);
+      if (authResult instanceof Response) return authResult;
+      const { user } = authResult;
+
       const url = new URL(req.url);
       const id = url.pathname.split('/').pop();
 
@@ -199,7 +222,7 @@ export const conversation = {
         );
       }
 
-      const deleted = await deleteConversation(id);
+      const deleted = await deleteConversation(id, user.id);
 
       if (!deleted) {
         return new Response(

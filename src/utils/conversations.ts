@@ -14,6 +14,7 @@ export interface ConversationMessage {
 
 export interface Conversation {
   id: string;
+  userId: string;
   title: string;
   createdAt: string;
   updatedAt: string;
@@ -108,6 +109,7 @@ function getConversationContent(messages: ConversationMessage[]): string {
  * Create a new conversation
  */
 export async function createConversation(
+  userId: string,
   title?: string
 ): Promise<Conversation> {
   const collection = await initConversationsStore();
@@ -118,6 +120,7 @@ export async function createConversation(
 
   const conversation: Conversation = {
     id,
+    userId,
     title: conversationTitle,
     createdAt: now,
     updatedAt: now,
@@ -133,6 +136,7 @@ export async function createConversation(
     embeddings: [embedding],
     metadatas: [
       {
+        userId,
         title: conversationTitle,
         createdAt: now,
         updatedAt: now,
@@ -145,10 +149,11 @@ export async function createConversation(
 }
 
 /**
- * Get a conversation by ID
+ * Get a conversation by ID (optionally filtered by userId)
  */
 export async function getConversation(
-  id: string
+  id: string,
+  userId?: string
 ): Promise<Conversation | null> {
   const collection = await initConversationsStore();
 
@@ -161,10 +166,18 @@ export async function getConversation(
   }
 
   const metadata = result.metadatas[0] as Record<string, unknown>;
+  const conversationUserId = metadata.userId as string;
+
+  // If userId is provided, check ownership
+  if (userId && conversationUserId !== userId) {
+    return null;
+  }
+
   const messagesJson = result.documents?.[0] || '[]';
 
   return {
     id,
+    userId: conversationUserId,
     title: (metadata.title as string) || 'Untitled',
     createdAt: (metadata.createdAt as string) || new Date().toISOString(),
     updatedAt: (metadata.updatedAt as string) || new Date().toISOString(),
@@ -173,11 +186,11 @@ export async function getConversation(
 }
 
 /**
- * List all conversations (without messages for efficiency)
+ * List all conversations for a user (without messages for efficiency)
  */
-export async function listConversations(): Promise<
-  Omit<Conversation, 'messages'>[]
-> {
+export async function listConversations(
+  userId: string
+): Promise<Omit<Conversation, 'messages'>[]> {
   const collection = await initConversationsStore();
 
   const result = await collection.get();
@@ -188,9 +201,11 @@ export async function listConversations(): Promise<
     const id = result.ids[i];
     const metadata = result.metadatas?.[i] as Record<string, unknown>;
 
-    if (id && metadata) {
+    // Filter by userId
+    if (id && metadata && metadata.userId === userId) {
       conversations.push({
         id,
+        userId: metadata.userId as string,
         title: (metadata.title as string) || 'Untitled',
         createdAt: (metadata.createdAt as string) || new Date().toISOString(),
         updatedAt: (metadata.updatedAt as string) || new Date().toISOString(),
@@ -207,9 +222,10 @@ export async function listConversations(): Promise<
 }
 
 /**
- * Search conversations by semantic similarity
+ * Search conversations by semantic similarity (filtered by userId)
  */
 export async function searchConversations(
+  userId: string,
   query: string,
   limit: number = 5,
   excludeConversationId?: string
@@ -222,7 +238,8 @@ export async function searchConversations(
   // Search for similar conversations
   const results = await collection.query({
     queryEmbeddings: [queryEmbedding],
-    nResults: limit + (excludeConversationId ? 1 : 0), // Get extra if we need to exclude one
+    nResults: limit + 50, // Get more results to filter by userId
+    where: { userId },
   });
 
   const searchResults: ConversationSearchResult[] = [];
@@ -235,6 +252,10 @@ export async function searchConversations(
       if (id === excludeConversationId) continue;
 
       const metadata = results.metadatas?.[0]?.[i] as Record<string, unknown>;
+
+      // Additional check for userId
+      if (metadata.userId !== userId) continue;
+
       const distance = results.distances?.[0]?.[i] ?? 1;
       // Cosine similarity: score = 1 - distance
       const score = Math.max(0, 1 - distance);
@@ -260,11 +281,12 @@ export async function searchConversations(
  */
 export async function updateConversation(
   id: string,
+  userId: string,
   updates: { title?: string }
 ): Promise<Conversation | null> {
   const collection = await initConversationsStore();
 
-  const existing = await getConversation(id);
+  const existing = await getConversation(id, userId);
   if (!existing) return null;
 
   const now = new Date().toISOString();
@@ -280,6 +302,7 @@ export async function updateConversation(
     embeddings: [embedding],
     metadatas: [
       {
+        userId,
         title: newTitle,
         createdAt: existing.createdAt,
         updatedAt: now,
@@ -288,7 +311,7 @@ export async function updateConversation(
     ],
   });
 
-  return getConversation(id);
+  return getConversation(id, userId);
 }
 
 /**
@@ -296,9 +319,10 @@ export async function updateConversation(
  */
 export async function addMessage(
   conversationId: string,
+  userId: string,
   message: Omit<ConversationMessage, 'id' | 'timestamp'>
 ): Promise<ConversationMessage | null> {
-  const conversation = await getConversation(conversationId);
+  const conversation = await getConversation(conversationId, userId);
   if (!conversation) return null;
 
   const id = uuid();
@@ -314,7 +338,7 @@ export async function addMessage(
 
   conversation.messages.push(newMessage);
 
-  await saveMessages(conversationId, conversation.messages);
+  await saveMessages(conversationId, userId, conversation.messages);
 
   return newMessage;
 }
@@ -324,11 +348,12 @@ export async function addMessage(
  */
 export async function saveMessages(
   conversationId: string,
+  userId: string,
   messages: ConversationMessage[]
 ): Promise<boolean> {
   const collection = await initConversationsStore();
 
-  const existing = await getConversation(conversationId);
+  const existing = await getConversation(conversationId, userId);
   if (!existing) return false;
 
   const now = new Date().toISOString();
@@ -344,6 +369,7 @@ export async function saveMessages(
     embeddings: [embedding],
     metadatas: [
       {
+        userId,
         title: existing.title,
         createdAt: existing.createdAt,
         updatedAt: now,
@@ -358,10 +384,13 @@ export async function saveMessages(
 /**
  * Delete a conversation and all its messages
  */
-export async function deleteConversation(id: string): Promise<boolean> {
+export async function deleteConversation(
+  id: string,
+  userId: string
+): Promise<boolean> {
   const collection = await initConversationsStore();
 
-  const existing = await getConversation(id);
+  const existing = await getConversation(id, userId);
   if (!existing) return false;
 
   await collection.delete({

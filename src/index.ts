@@ -6,11 +6,16 @@ import {
   philosophersEndpoint,
   philosopherDetailEndpoint,
 } from './endpoints/philosophers';
+import { signup, login, me } from './endpoints/auth';
 import { initializeAgent } from './utils/agent';
+import { testConnection } from './db/connection';
 
 console.log(
   `🚀 Starting bun server in ${process.env.NODE_ENV || 'development'} mode`
 );
+
+// Initialize database connection
+await testConnection();
 
 await initializeAgent();
 
@@ -21,7 +26,13 @@ const server = Bun.serve({
     // Frontend routes
     '/': indexPageHtml,
     '/about': indexPageHtml,
+    '/login': indexPageHtml,
+    '/signup': indexPageHtml,
     '/c/:id': indexPageHtml,
+    // Auth routes
+    '/auth/signup': { POST: signup },
+    '/auth/login': { POST: login },
+    '/auth/me': { GET: me },
     // API routes
     '/agent': agent,
     '/rag': rag,
@@ -40,9 +51,18 @@ const server = Bun.serve({
 });
 
 console.log(`\n💻 Web UI: http://localhost:${server.port}`);
-console.log(`    http://localhost:${server.port}     - Main chat interface`);
-console.log(`    http://localhost:${server.port}/about  - About page`);
-console.log(`    http://localhost:${server.port}/c/:id  - Conversation by ID`);
+console.log(`    http://localhost:${server.port}        - Main chat interface`);
+console.log(`    http://localhost:${server.port}/about     - About page`);
+console.log(`    http://localhost:${server.port}/login     - Login page`);
+console.log(`    http://localhost:${server.port}/signup    - Signup page`);
+console.log(
+  `    http://localhost:${server.port}/c/:id     - Conversation by ID`
+);
+
+console.log('\n🔐 Auth Endpoints:');
+console.log('  POST /auth/signup           - Create a new user account');
+console.log('  POST /auth/login            - Authenticate a user');
+console.log('  GET  /auth/me               - Get current user');
 
 console.log('\n🤖 AI Endpoints:');
 console.log(
@@ -56,13 +76,21 @@ console.log(
 console.log('  GET  /rag                   - Get collection statistics');
 
 console.log('\n🗣️  Conversation Endpoints:');
-console.log('  GET  /conversations         - List all conversations');
-console.log('  POST /conversations         - Create a new conversation');
-console.log('  GET  /conversations/:id     - Get a conversation with messages');
 console.log(
-  '  PUT  /conversations/:id     - Update conversation title or messages'
+  '  GET  /conversations         - List all conversations (auth required)'
 );
-console.log('  DELETE /conversations/:id   - Delete a conversation');
+console.log(
+  '  POST /conversations         - Create a new conversation (auth required)'
+);
+console.log(
+  '  GET  /conversations/:id     - Get a conversation with messages (auth required)'
+);
+console.log(
+  '  PUT  /conversations/:id     - Update conversation title or messages (auth required)'
+);
+console.log(
+  '  DELETE /conversations/:id   - Delete a conversation (auth required)'
+);
 
 console.log('\n🧙 Philosopher Endpoints:');
 console.log('  GET  /api/philosophers      - List all indexed philosophers');

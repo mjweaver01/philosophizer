@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Conversation } from '../hooks/useConversations';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ConversationSidebarProps {
   conversations: Conversation[];
@@ -22,8 +23,14 @@ export function ConversationSidebar({
   onDeleteConversation,
   onRenameConversation,
 }: ConversationSidebarProps) {
+  const { user, logout } = useAuth();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
+
+  const handleLogout = () => {
+    logout();
+    window.location.href = '/login';
+  };
 
   const handleStartEdit = (conversation: Conversation) => {
     setEditingId(conversation.id);
@@ -230,6 +237,37 @@ export function ConversationSidebar({
               </div>
             )}
           </div>
+
+          {/* Footer with User Info */}
+          {user && (
+            <div className="border-t border-border p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm text-text truncate">{user.email}</div>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="ml-2 p-2 text-text-muted hover:text-text hover:bg-surface-secondary rounded-lg transition-colors cursor-pointer"
+                  title="Logout"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </>

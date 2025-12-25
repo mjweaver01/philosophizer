@@ -10,7 +10,9 @@ Built with Bun, React, TypeScript, and ChromaDB for semantic search over primary
 - **AI SDK**: Vercel AI SDK v6 (beta)
 - **Frontend**: React 19, TypeScript
 - **Styling**: TailwindCSS 4
+- **Database**: PostgreSQL 16
 - **Vector Database**: ChromaDB
+- **Authentication**: JWT with bcrypt
 - **Markdown**: Streamdown (optimized for streaming AI responses)
 - **Validation**: Zod schemas
 
@@ -30,36 +32,73 @@ bun install
 
 ### Environment Variables
 
-Create a `.env` file in the root directory:
+Copy `.env.example` to `.env` and configure:
+
+```bash
+cp .env.example .env
+```
+
+Key variables to set:
 
 ```env
-# Required: AI Provider Configuration
-AI_BASE_URL=http://localhost:1234/v1
-AI_API_KEY=lm-studio
+# Database
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/philosophizer
 
-# Model Configuration
-LLM_MODEL=qwen3-1.7b
-SEARCH_MODEL=gpt-4.1-mini
+# Authentication
+JWT_SECRET=your-super-secret-jwt-key-change-in-production
+JWT_EXPIRES_IN=7d
+
+# AI Provider
+OPENAI_API_KEY=your-openai-api-key
 
 # Optional: ChromaDB (defaults to localhost:8000)
 CHROMA_URL=http://localhost:8000
 ```
 
-## ChromaDB Setup
+See `.env.example` for all available configuration options.
 
-### Start ChromaDB
+## Database Setup
+
+### PostgreSQL (Required)
+
+Start PostgreSQL with Docker:
+
+```bash
+# Start PostgreSQL
+bun run postgres
+
+# Setup database schema
+bun run db:setup
+
+# View logs
+bun run postgres:logs
+
+# Stop PostgreSQL
+bun run postgres:stop
+```
+
+Or use local PostgreSQL:
+
+```bash
+createdb philosophizer
+psql -d philosophizer -f src/db/schema.sql
+```
+
+### ChromaDB (Vector Database)
+
+Start ChromaDB:
 
 ```bash
 bun run chroma
 ```
 
-### Stop ChromaDB
+Stop ChromaDB:
 
 ```bash
 bun run chroma:stop
 ```
 
-### ChromaDB Admin UI
+### ChromaDB Admin UI (Optional)
 
 View and manage your vector database with a web interface:
 

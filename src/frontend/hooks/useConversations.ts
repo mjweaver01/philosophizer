@@ -16,6 +16,15 @@ export interface Conversation {
   messages?: ConversationMessage[];
 }
 
+// Helper to get auth headers
+function getAuthHeaders(): HeadersInit {
+  const token = localStorage.getItem('auth_token');
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
+
 export function useConversations() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConversation, setCurrentConversation] =
@@ -27,7 +36,9 @@ export function useConversations() {
   const fetchConversations = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/conversations');
+      const response = await fetch('/conversations', {
+        headers: getAuthHeaders(),
+      });
       if (!response.ok) throw new Error('Failed to fetch conversations');
       const data = await response.json();
       setConversations(data);
@@ -51,7 +62,7 @@ export function useConversations() {
         setIsLoading(true);
         const response = await fetch('/conversations', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getAuthHeaders(),
           body: JSON.stringify({ title: title || 'New Conversation' }),
         });
         if (!response.ok) throw new Error('Failed to create conversation');
@@ -75,7 +86,9 @@ export function useConversations() {
     async (id: string): Promise<Conversation | null> => {
       try {
         setIsLoading(true);
-        const response = await fetch(`/conversations/${id}`);
+        const response = await fetch(`/conversations/${id}`, {
+          headers: getAuthHeaders(),
+        });
         if (!response.ok) throw new Error('Failed to load conversation');
         const conversation = await response.json();
         setCurrentConversation(conversation);
@@ -101,16 +114,14 @@ export function useConversations() {
           `/conversations/${currentConversation.id}`,
           {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getAuthHeaders(),
             body: JSON.stringify({ messages }),
           }
         );
         if (!response.ok) throw new Error('Failed to save messages');
 
         // Update local state
-        setCurrentConversation(prev =>
-          prev ? { ...prev, messages } : null
-        );
+        setCurrentConversation(prev => (prev ? { ...prev, messages } : null));
 
         // Refresh conversations list to update timestamps
         fetchConversations();
@@ -130,7 +141,7 @@ export function useConversations() {
       try {
         const response = await fetch(`/conversations/${id}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getAuthHeaders(),
           body: JSON.stringify({ title }),
         });
         if (!response.ok) throw new Error('Failed to update title');
@@ -158,6 +169,7 @@ export function useConversations() {
       try {
         const response = await fetch(`/conversations/${id}`, {
           method: 'DELETE',
+          headers: getAuthHeaders(),
         });
         if (!response.ok) throw new Error('Failed to delete conversation');
 
@@ -194,4 +206,3 @@ export function useConversations() {
     clearCurrentConversation,
   };
 }
-

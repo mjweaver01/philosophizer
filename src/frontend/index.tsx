@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ChatPage } from './pages/ChatPage';
 import { AboutPage } from './pages/AboutPage';
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import { AuthProvider } from './contexts/AuthContext';
 import './styles.css';
 
 function App() {
@@ -17,6 +20,14 @@ function App() {
   }, []);
 
   // Route based on path
+  if (currentPath === '/login') {
+    return <LoginPage />;
+  }
+
+  if (currentPath === '/signup') {
+    return <SignupPage />;
+  }
+
   if (currentPath === '/about') {
     return <AboutPage />;
   }
@@ -26,4 +37,8 @@ function App() {
 }
 
 const root = createRoot(document.getElementById('root') as HTMLElement);
-root.render(<App />);
+root.render(
+  <AuthProvider>
+    <App />
+  </AuthProvider>
+);

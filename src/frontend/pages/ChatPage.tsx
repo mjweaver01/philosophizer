@@ -8,6 +8,8 @@ import { ChatInput } from '../components/ChatInput';
 import { ConversationSidebar } from '../components/ConversationSidebar';
 import { useAutoScroll } from '../hooks/useAutoScroll';
 import { useConversations } from '../hooks/useConversations';
+import { useAuth } from '../contexts/AuthContext';
+import { Logo } from '../components/Logo';
 
 // Utility to shuffle and limit questions
 function getRandomQuestions(questions: string[], limit: number): string[] {
@@ -30,6 +32,7 @@ function setConversationIdInUrl(id: string | null) {
 }
 
 export function ChatPage() {
+  const { user, loading: authLoading, isAuthenticated } = useAuth();
   const [input, setInput] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [initialLoadDone, setInitialLoadDone] = useState(false);
@@ -56,6 +59,13 @@ export function ChatPage() {
   const { messages, sendMessage, setMessages, status } = useChat({
     transport: new DefaultChatTransport({
       api: '/agent',
+      headers: (): Record<string, string> => {
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+          return { Authorization: `Bearer ${token}` };
+        }
+        return {};
+      },
     }),
     onError: err => {
       const errorText =
@@ -75,6 +85,13 @@ export function ChatPage() {
 
   const { scrollEndRef, scrollContainerRef, handleScroll, enableAutoScroll } =
     useAutoScroll(messages);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      window.location.href = '/login';
+    }
+  }, [authLoading, isAuthenticated]);
 
   const isProcessing = status === 'submitted' || status === 'streaming';
 
@@ -246,6 +263,22 @@ export function ChatPage() {
     setMessages([]);
     clearCurrentConversation();
   };
+
+  // Show loading state while checking auth
+  if (authLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="animate-pulse">
+          <Logo />
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render anything if not authenticated (will redirect)
+  if (!isAuthenticated) {
+    return null;
+  }
 
   const MenuButton = () => (
     <button

@@ -1,6 +1,7 @@
 import { createAgentUIStreamResponse } from 'ai';
 import type { AgentRequest } from '../types';
 import { createAgent } from '../utils/agent';
+import { requireAuth } from '../middleware/auth';
 
 interface AgentRequestWithConversation extends AgentRequest {
   conversationId?: string;
@@ -9,6 +10,11 @@ interface AgentRequestWithConversation extends AgentRequest {
 export const agent = {
   POST: async (req: Request) => {
     try {
+      // Require authentication for agent endpoint
+      const authResult = await requireAuth(req);
+      if (authResult instanceof Response) return authResult;
+      const { user } = authResult;
+
       const body = (await req.json()) as AgentRequestWithConversation;
 
       if (!body.messages || !Array.isArray(body.messages)) {
@@ -55,7 +61,11 @@ export const agent = {
         `[Agent] Creating agent with ${formattedMessages.length} messages${body.conversationId ? ` (conversation: ${body.conversationId})` : ''}`
       );
 
-      const agent = await createAgent(formattedMessages, body.conversationId);
+      const agent = await createAgent(
+        formattedMessages,
+        user.id,
+        body.conversationId
+      );
 
       return createAgentUIStreamResponse({
         agent: agent as any,

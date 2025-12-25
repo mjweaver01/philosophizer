@@ -7,8 +7,10 @@
 #   docker compose logs -f         # View logs
 #
 # First time setup:
-#   1. docker compose up -d
-#   2. Wait for ollama to download the model (check logs: docker compose logs -f ollama)
+#   1. Create .env file with required variables (see .env.example)
+#   2. docker compose up -d
+#   3. Wait for ollama to download the model (check logs: docker compose logs -f ollama)
+#   4. PostgreSQL schema will be automatically initialized
 #
 # To update ChromaDB data:
 #   1. bun run chroma:bp           # Backup and publish new image
@@ -16,6 +18,29 @@
 #   3. docker compose up -d        # Restart with new data
 
 services:
+  # ==========================================================================
+  # PostgreSQL Database
+  # ==========================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: philosophizer-postgres
+    restart: unless-stopped
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-philosophizer}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./src/db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
   # ==========================================================================
   # Ollama - Local LLM & Embedding Server
   # ==========================================================================
@@ -73,6 +98,11 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=1738
+      # Database connection (internal Docker network)
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-philosophizer}
+      # JWT Configuration
+      - JWT_SECRET=${JWT_SECRET:-change-this-in-production}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
       # ChromaDB connection (internal Docker network)
       - CHROMA_URL=http://chroma:8000
       # LLM (chat) provider configuration
@@ -87,6 +117,8 @@ services:
       - EMBEDDING_API_KEY=ollama
       - EMBEDDING_MODEL=nomic-embed-text
     depends_on:
+      postgres:
+        condition: service_healthy
       chroma:
         condition: service_started
       ollama:
@@ -99,5 +131,7 @@ services:
 # Persistent Volumes
 # ==========================================================================
 volumes:
+  postgres-data:
+    name: philosophizer-postgres-data
   ollama-data:
     name: philosophizer-ollama-data
