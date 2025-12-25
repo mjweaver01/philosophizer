@@ -39,6 +39,9 @@ EOSQL\n\
 echo ""' > /docker-entrypoint-initdb.d/03-verify.sh \
   && chmod +x /docker-entrypoint-initdb.d/03-verify.sh
 
-# The base image already has the correct CMD and EXPOSE
+# Expose PostgreSQL port
+EXPOSE 5432
+
 # Data directory is /var/lib/postgresql/data
+# The base image provides the correct CMD to start PostgreSQL
 
