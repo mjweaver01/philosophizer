@@ -65,6 +65,40 @@ fi
 # Create versioned backup
 cp "$BACKUP_FILE" "$VERSIONED_BACKUP"
 
+# Create transaction-safe merge file for remote database updates
+MERGE_FILE="$PROJECT_ROOT/pgvector-merge.sql"
+echo "💾 Creating transaction-safe merge file..."
+
+cat > "$MERGE_FILE" << 'EOF'
+-- Transaction-safe vector data merge
+-- This replaces philosopher_text_chunks while preserving all other tables
+
+BEGIN;
+
+-- Remove all existing vector data
+TRUNCATE TABLE philosopher_text_chunks CASCADE;
+
+-- Insert new vector data from backup
+EOF
+
+# Append the backup data
+cat "$BACKUP_FILE" >> "$MERGE_FILE"
+
+# Complete the transaction
+cat >> "$MERGE_FILE" << 'EOF'
+
+COMMIT;
+
+-- Verify the merge
+SELECT 
+  'Merge completed successfully!' as status,
+  COUNT(*) as total_chunks,
+  COUNT(DISTINCT philosopher) as philosophers
+FROM philosopher_text_chunks;
+EOF
+
+MERGE_SIZE=$(du -h "$MERGE_FILE" | cut -f1)
+
 # Get file size
 BACKUP_SIZE=$(du -h "$BACKUP_FILE" | cut -f1)
 
@@ -74,6 +108,7 @@ echo ""
 echo "📁 Files created:"
 echo "   $BACKUP_FILE ($BACKUP_SIZE)"
 echo "   $VERSIONED_BACKUP"
+echo "   $MERGE_FILE ($MERGE_SIZE) [transaction-safe for remote merge]"
 echo ""
 echo "📊 Backup statistics:"
 docker compose exec -T postgres psql -U "$DB_USER" -d "$DB_NAME" -c "
@@ -89,6 +124,8 @@ ORDER BY philosopher;
 echo ""
 echo "🎯 Next steps:"
 echo "   1. Review: cat pgvector-backup.sql | head -20"
-echo "   2. Publish: ./scripts/publish-pgvector.sh your-dockerhub-username/philosophizer-pgvector"
+echo "   2. Local restore: ./scripts/restore-pgvector.sh"
+echo "   3. Remote merge: ./scripts/merge-pgvector.sh \$DATABASE_URL"
+echo "   4. Publish Docker image: ./scripts/publish-pgvector.sh your-dockerhub-username/philosophizer-pgvector"
 echo ""
 

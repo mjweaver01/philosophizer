@@ -8,6 +8,7 @@
     "dev:debug": "bun --inspect --watch src/index.ts",
     "start": "bun src/index.ts",
     "start:docker": "PORT=80 docker compose up -d",
+    "stop:docker": "docker compose down",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "postgres": "docker compose up -d postgres",

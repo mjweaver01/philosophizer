@@ -171,6 +171,122 @@ bun run rag:clear
 bun run chroma:backup
 ```
 
+## Vector Data Backup & Merge Workflows
+
+### Overview
+
+The vector database contains philosopher text chunks with embeddings. You can backup, restore, and selectively merge this data across environments while preserving user data (conversations, messages, etc.).
+
+### Backup Vector Data
+
+Create a backup of the vector data from your local database:
+
+```bash
+./scripts/backup-pgvector.sh
+```
+
+This creates three files:
+- `pgvector-backup.sql` - Standard SQL dump with INSERT statements
+- `pgvector-merge.sql` - Transaction-wrapped version for safe merging
+- `pgvector-backup-TIMESTAMP.sql` - Versioned backup
+
+### Restore to Local Database
+
+Restore vector data to your local development database:
+
+```bash
+# Auto-detect mode (merge if data exists, full restore if empty)
+./scripts/restore-pgvector.sh
+
+# Force merge mode (replace existing data)
+./scripts/restore-pgvector.sh --merge
+
+# Force full mode (standard restore)
+./scripts/restore-pgvector.sh --full
+```
+
+### Merge to Remote/Cloud Database
+
+Update vector data in a production or cloud database (Railway, etc.) **while preserving all other tables**:
+
+```bash
+# Using DATABASE_URL environment variable
+DATABASE_URL="postgresql://user:pass@host:port/dbname" ./scripts/merge-pgvector.sh
+
+# Or pass connection string as argument
+./scripts/merge-pgvector.sh "postgresql://user:pass@host:port/dbname"
+```
+
+**What gets replaced:**
+- ✅ `philosopher_text_chunks` table (vector data)
+
+**What gets preserved:**
+- ✅ `users` table
+- ✅ `conversations` table
+- ✅ `conversation_messages` table
+- ✅ `magic_links` table
+
+### Common Workflows
+
+#### Workflow 1: Update Production Vector Data
+
+When you've updated or added new philosophical texts locally and want to deploy to production:
+
+```bash
+# 1. Index texts locally
+bun run rag:index
+
+# 2. Backup vector data
+./scripts/backup-pgvector.sh
+
+# 3. Merge to production (Railway)
+./scripts/merge-pgvector.sh "$DATABASE_URL"
+```
+
+#### Workflow 2: Publish Pre-loaded Docker Image
+
+Create a Docker image with pre-loaded vector data for fast deployment:
+
+```bash
+# 1. Backup vector data
+./scripts/backup-pgvector.sh
+
+# 2. Build and publish Docker image
+./scripts/publish-pgvector.sh your-dockerhub-username/philosophizer-pgvector:latest
+
+# 3. Deploy the image to Railway or other platforms
+```
+
+The published image includes:
+- PostgreSQL with pgvector extension
+- Database schema
+- Pre-loaded vector data
+
+#### Workflow 3: Sync Between Environments
+
+Copy vector data from one environment to another while keeping conversations:
+
+```bash
+# 1. Backup from source environment
+DATABASE_URL="postgresql://source-db-url" \
+  docker compose exec -T postgres pg_dump ... > backup.sql
+
+# 2. Or backup from local
+./scripts/backup-pgvector.sh
+
+# 3. Merge to destination
+./scripts/merge-pgvector.sh "postgresql://destination-db-url"
+```
+
+### Safety Features
+
+All merge operations include:
+- **Transaction safety**: Changes are rolled back if any error occurs
+- **Confirmation prompts**: Prevents accidental data loss
+- **Connection testing**: Validates database access before making changes
+- **Statistics reporting**: Shows before/after state of all tables
+- **Preserved data verification**: Confirms user/conversation data is intact
+
 ## API Endpoints
 
 ### Authentication
