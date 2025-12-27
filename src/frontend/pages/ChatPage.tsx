@@ -308,9 +308,22 @@ export function ChatPage() {
       <button
         onClick={handleClearConversation}
         disabled={isProcessing}
-        className={`${small ? 'text-[14px]' : 'text-sm'} text-text-muted hover:opacity-50 cursor-pointer rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+        className={`flex items-center justify-center ${small ? 'w-7 h-7' : 'w-9 h-9'} bg-surface border border-border hover:bg-surface-secondary text-text-muted hover:text-text rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
+        title="New Chat"
       >
-        New Chat
+        <svg
+          width={small ? '16' : '18'}
+          height={small ? '16' : '18'}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M12 20h9" />
+          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+        </svg>
       </button>
     );
   };
@@ -339,7 +352,7 @@ export function ChatPage() {
   );
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex flex-col h-screen bg-background">
       {/* Sidebar */}
       <ConversationSidebar
         conversations={conversations}
@@ -353,7 +366,7 @@ export function ChatPage() {
       />
 
       {/* Main Chat Area */}
-      <div className="flex flex-col flex-1 min-w-0">
+      <div className="flex flex-col flex-1 min-w-0 h-full">
         {/* Header */}
         <div className="border-b border-border bg-surface">
           <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -389,7 +402,7 @@ export function ChatPage() {
         <div className="border-t border-border bg-surface">
           <div className="relative max-w-3xl mx-auto px-4 py-4">
             {messages.length > 0 && (
-              <div className="absolute -top-10 left-2 p-2 pb-[7px] bg-background">
+              <div className="absolute -top-10 left-4 pb-[7px]">
                 <Clear small />
               </div>
             )}

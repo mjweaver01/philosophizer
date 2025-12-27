@@ -77,3 +77,8 @@
   --color-warning-border: #92400e;
   --color-warning-text: #fcd34d;
 }
+
+body,
+html {
+  overflow: hidden;
+}
