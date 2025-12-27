@@ -42,44 +42,45 @@ services:
   # ==========================================================================
   # Ollama - Local LLM & Embedding Server
   # ==========================================================================
-  ollama:
-    image: ollama/ollama:latest
-    container_name: philosophizer-ollama
-    restart: unless-stopped
-    ports:
-      - "${OLLAMA_PORT:-11434}:11434"
-    volumes:
-      - ollama-data:/root/.ollama
-    healthcheck:
-      test: ["CMD", "ollama", "list"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+  # Commented out - using LM Studio instead
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   container_name: philosophizer-ollama
+  #   restart: unless-stopped
+  #   ports:
+  #     - "${OLLAMA_PORT:-11434}:11434"
+  #   volumes:
+  #     - ollama-data:/root/.ollama
+  #   healthcheck:
+  #     test: ["CMD", "ollama", "list"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #     start_period: 10s
 
   # Pull the nomic-embed-text model on startup
-  ollama-pull-embeddings:
-    image: ollama/ollama:latest
-    container_name: philosophizer-ollama-pull-embeddings
-    depends_on:
-      ollama:
-        condition: service_healthy
-    entrypoint: ["ollama", "pull", "nomic-embed-text"]
-    environment:
-      - OLLAMA_HOST=http://ollama:11434
-    restart: "no"
+  # ollama-pull-embeddings:
+  #   image: ollama/ollama:latest
+  #   container_name: philosophizer-ollama-pull-embeddings
+  #   depends_on:
+  #     ollama:
+  #       condition: service_healthy
+  #   entrypoint: ["ollama", "pull", "nomic-embed-text"]
+  #   environment:
+  #     - OLLAMA_HOST=http://ollama:11434
+  #   restart: "no"
 
   # Pull the Qwen3 1.7B model for chat
-  ollama-pull-qwen:
-    image: ollama/ollama:latest
-    container_name: philosophizer-ollama-pull-qwen
-    depends_on:
-      ollama:
-        condition: service_healthy
-    entrypoint: ["ollama", "pull", "qwen3:1.7b"]
-    environment:
-      - OLLAMA_HOST=http://ollama:11434
-    restart: "no"
+  # ollama-pull-qwen:
+  #   image: ollama/ollama:latest
+  #   container_name: philosophizer-ollama-pull-qwen
+  #   depends_on:
+  #     ollama:
+  #       condition: service_healthy
+  #   entrypoint: ["ollama", "pull", "qwen3:1.7b"]
+  #   environment:
+  #     - OLLAMA_HOST=http://ollama:11434
+  #   restart: "no"
 
   # ==========================================================================
   # Philosophizer Application
@@ -100,24 +101,21 @@ services:
       # JWT Configuration
       - JWT_SECRET=${JWT_SECRET:-change-this-in-production}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
-      # LLM (chat) provider configuration - using local Ollama with Qwen3 1.7B
-      - AI_BASE_URL=${AI_BASE_URL:-http://ollama:11434/v1}
-      - LLM_MODEL=${LLM_MODEL:-qwen3:1.7b}
-      # Accept either AI_API_KEY or OPENAI_API_KEY (not needed for Ollama, but kept for compatibility)
-      - AI_API_KEY=${AI_API_KEY:-ollama}
+      # LLM (chat) provider configuration - using LM Studio on host machine
+      - AI_BASE_URL=${AI_BASE_URL:-http://host.docker.internal:1234/v1}
+      - LLM_MODEL=${LLM_MODEL}
+      # Accept either AI_API_KEY or OPENAI_API_KEY (not needed for LM Studio, but kept for compatibility)
+      - AI_API_KEY=${AI_API_KEY:-lm-studio}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - SEARCH_MODEL=${SEARCH_MODEL:-qwen3:1.7b}
-      # Embedding service - uses Ollama with nomic-embed-text
-      - EMBEDDING_BASE_URL=http://ollama:11434/v1
-      - EMBEDDING_API_KEY=ollama
-      - EMBEDDING_MODEL=nomic-embed-text
+      - SEARCH_MODEL=${SEARCH_MODEL}
+      # Embedding service - using LM Studio on host machine
+      - EMBEDDING_BASE_URL=${EMBEDDING_BASE_URL:-http://host.docker.internal:1234/v1}
+      - EMBEDDING_API_KEY=${EMBEDDING_API_KEY:-lm-studio}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL}
     depends_on:
       postgres:
         condition: service_healthy
-      ollama:
-        condition: service_healthy
-      ollama-pull-qwen:
-        condition: service_completed_successfully
+      # Removed ollama dependencies - using LM Studio on host instead
     extra_hosts:
       # Allow container to access host machine services (for local LM Studio)
       - "host.docker.internal:host-gateway"
@@ -128,5 +126,6 @@ services:
 volumes:
   postgres-data:
     name: philosophizer-postgres-data
-  ollama-data:
-    name: philosophizer-ollama-data
+  # Commented out - not needed when using LM Studio
+  # ollama-data:
+  #   name: philosophizer-ollama-data
