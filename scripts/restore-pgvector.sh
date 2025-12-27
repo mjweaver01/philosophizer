@@ -41,7 +41,7 @@ if [ ! -f "$BACKUP_FILE" ]; then
 fi
 
 # Check if PostgreSQL container is running
-if ! docker compose ps postgres | grep -q "running"; then
+if ! docker compose ps postgres | grep -q "Up"; then
   echo "❌ Error: PostgreSQL container is not running"
   echo "   Run: docker compose up -d postgres"
   exit 1
