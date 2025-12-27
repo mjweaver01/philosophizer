@@ -12,7 +12,7 @@ node_modules/
 *.swo
 .DS_Store
 
-# Environment files (add secrets via Docker/Railway env vars)
+# Environment files (add secrets via Docker env vars)
 .env
 .env.*
 !.env.example

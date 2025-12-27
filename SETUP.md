@@ -186,6 +186,7 @@ Create a backup of the vector data from your local database:
 ```
 
 This creates three files:
+
 - `pgvector-backup.sql` - Standard SQL dump with INSERT statements
 - `pgvector-merge.sql` - Transaction-wrapped version for safe merging
 - `pgvector-backup-TIMESTAMP.sql` - Versioned backup
@@ -207,7 +208,7 @@ Restore vector data to your local development database:
 
 ### Merge to Remote/Cloud Database
 
-Update vector data in a production or cloud database (Railway, etc.) **while preserving all other tables**:
+Update vector data in a production or cloud database **while preserving all other tables**:
 
 ```bash
 # Using DATABASE_URL environment variable
@@ -218,9 +219,11 @@ DATABASE_URL="postgresql://user:pass@host:port/dbname" ./scripts/merge-pgvector.
 ```
 
 **What gets replaced:**
+
 - ✅ `philosopher_text_chunks` table (vector data)
 
 **What gets preserved:**
+
 - ✅ `users` table
 - ✅ `conversations` table
 - ✅ `conversation_messages` table
@@ -239,7 +242,7 @@ bun run rag:index
 # 2. Backup vector data
 ./scripts/backup-pgvector.sh
 
-# 3. Merge to production (Railway)
+# 3. Merge to production
 ./scripts/merge-pgvector.sh "$DATABASE_URL"
 ```
 
@@ -254,10 +257,11 @@ Create a Docker image with pre-loaded vector data for fast deployment:
 # 2. Build and publish Docker image
 ./scripts/publish-pgvector.sh your-dockerhub-username/philosophizer-pgvector:latest
 
-# 3. Deploy the image to Railway or other platforms
+# 3. Deploy the image
 ```
 
 The published image includes:
+
 - PostgreSQL with pgvector extension
 - Database schema
 - Pre-loaded vector data
@@ -281,6 +285,7 @@ DATABASE_URL="postgresql://source-db-url" \
 ### Safety Features
 
 All merge operations include:
+
 - **Transaction safety**: Changes are rolled back if any error occurs
 - **Confirmation prompts**: Prevents accidental data loss
 - **Connection testing**: Validates database access before making changes

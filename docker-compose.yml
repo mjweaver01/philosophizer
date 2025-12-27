@@ -58,13 +58,25 @@ services:
       start_period: 10s
 
   # Pull the nomic-embed-text model on startup
-  ollama-pull:
+  ollama-pull-embeddings:
     image: ollama/ollama:latest
-    container_name: philosophizer-ollama-pull
+    container_name: philosophizer-ollama-pull-embeddings
     depends_on:
       ollama:
         condition: service_healthy
     entrypoint: ["ollama", "pull", "nomic-embed-text"]
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    restart: "no"
+
+  # Pull the Qwen3 1.7B model for chat
+  ollama-pull-qwen:
+    image: ollama/ollama:latest
+    container_name: philosophizer-ollama-pull-qwen
+    depends_on:
+      ollama:
+        condition: service_healthy
+    entrypoint: ["ollama", "pull", "qwen3:1.7b"]
     environment:
       - OLLAMA_HOST=http://ollama:11434
     restart: "no"
@@ -88,13 +100,13 @@ services:
       # JWT Configuration
       - JWT_SECRET=${JWT_SECRET:-change-this-in-production}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
-      # LLM (chat) provider configuration
-      - AI_BASE_URL=${AI_BASE_URL:-https://api.openai.com/v1}
-      - LLM_MODEL=${LLM_MODEL:-gpt-4.1}
-      # Accept either AI_API_KEY or OPENAI_API_KEY (code falls back automatically)
-      - AI_API_KEY=${AI_API_KEY}
+      # LLM (chat) provider configuration - using local Ollama with Qwen3 1.7B
+      - AI_BASE_URL=${AI_BASE_URL:-http://ollama:11434/v1}
+      - LLM_MODEL=${LLM_MODEL:-qwen3:1.7b}
+      # Accept either AI_API_KEY or OPENAI_API_KEY (not needed for Ollama, but kept for compatibility)
+      - AI_API_KEY=${AI_API_KEY:-ollama}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - SEARCH_MODEL=${SEARCH_MODEL:-gpt-4.1-mini}
+      - SEARCH_MODEL=${SEARCH_MODEL:-qwen3:1.7b}
       # Embedding service - uses Ollama with nomic-embed-text
       - EMBEDDING_BASE_URL=http://ollama:11434/v1
       - EMBEDDING_API_KEY=ollama
@@ -104,6 +116,8 @@ services:
         condition: service_healthy
       ollama:
         condition: service_healthy
+      ollama-pull-qwen:
+        condition: service_completed_successfully
     extra_hosts:
       # Allow container to access host machine services (for local LM Studio)
       - "host.docker.internal:host-gateway"

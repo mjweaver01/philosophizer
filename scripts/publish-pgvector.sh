@@ -84,7 +84,7 @@ echo ""
 
 echo "✅ Image published successfully!"
 echo ""
-echo "🎯 To use in Railway:"
+echo "🎯 To use in production:"
 echo "   1. Create new service → Docker Image"
 echo "   2. Image: $IMAGE_NAME"
 echo "   3. Set POSTGRES_PASSWORD environment variable"
