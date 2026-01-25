@@ -39,7 +39,7 @@ await initializeAgent();
 
 const server = Bun.serve({
   port: process.env.PORT ?? 1738,
-  hostname: process.env.HOSTNAME ?? 'localhost', // Use '0.0.0.0' for network access
+  hostname: process.env.HOSTNAME ?? (process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost'),
   idleTimeout: 120,
   routes: {
     // Frontend routes
