@@ -6,18 +6,18 @@ This guide walks you through deploying Philosophizer on Railway using your custo
 
 1. Create a Railway project
 2. Deploy PostgreSQL service using your Docker Hub image (`mjweaver01/philosophizer-pgv-hqe:latest`)
-3. Deploy Nomic embedding service (`ai/nomic-embed-text-v1.5:latest`)
+3. Deploy Ollama service (`ollama/ollama:latest`) and pull nomic-embed-text model
 4. Deploy your app from GitHub repository
 5. Configure environment variables to connect all services
 6. Access your app via the generated Railway URL
 
-**Deployment time**: ~10 minutes (no model download needed!)
+**Deployment time**: ~15 minutes (includes one-time model download)
 
 ## Overview
 
 Railway doesn't use docker-compose, so we'll deploy three separate services:
 1. **PostgreSQL Service** - Using your custom `mjweaver01/philosophizer-pgv-hqe:latest` image
-2. **Embeddings Service** - Official Nomic AI `nomic-embed-text-v1.5` Docker image
+2. **Ollama Service** - Hosting the `nomic-embed-text-v1.5` embedding model
 3. **App Service** - The main Bun application
 
 ### Service Architecture
@@ -37,11 +37,11 @@ Railway doesn't use docker-compose, so we'll deploy three separate services:
      │       │
      ▼       ▼
 ┌─────────┐ ┌──────────────┐
-│ Postgres│ │ Nomic Embed  │
-│ +vector │ │    v1.5      │
-│ :5432   │ │ :12434       │
+│ Postgres│ │    Ollama    │
+│ +vector │ │ nomic-embed  │
+│ :5432   │ │ :11434       │
 └─────────┘ └──────────────┘
-(Volume)      (Pre-built)
+(Volume)      (Volume)
 ```
 
 ## Prerequisites
@@ -52,15 +52,15 @@ Railway doesn't use docker-compose, so we'll deploy three separate services:
 
 ## Important: Embedding Model Consistency
 
-**Critical**: Your PostgreSQL image contains vectors that were created using `nomic-embed-text-v1.5`. You **must** use the exact same model for querying, otherwise semantic search won't work correctly. This guide uses the official Nomic AI Docker image which has the model pre-built - no download needed!
+**Critical**: Your PostgreSQL image contains vectors that were created using `nomic-embed-text-v1.5`. You **must** use the exact same model for querying, otherwise semantic search won't work correctly. This guide uses Ollama which is proven reliable for hosting local embedding models.
 
-### Why the Official Nomic Image?
+### Why Ollama?
 
-✅ **Pre-built**: Model included in the image (~261 MB total)  
-✅ **Official**: Built and maintained by Nomic AI  
-✅ **Fast startup**: No model download on first run  
-✅ **Simple**: Just deploy the image, no configuration needed  
-✅ **OpenAI-compatible**: Works with your existing code
+✅ **Reliable**: Battle-tested and widely used for self-hosted LLMs  
+✅ **Simple**: Easy model management with `ollama pull` and `ollama list`  
+✅ **OpenAI-compatible API**: Works with your existing code  
+✅ **Persistent storage**: Models stay downloaded across deployments (with volume)  
+✅ **Good documentation**: Large community and excellent support  
 
 ## Step 1: Create a New Railway Project
 
@@ -107,37 +107,82 @@ openssl rand -base64 32
 3. Mount Path: `/var/lib/postgresql/data`
 4. This ensures your database persists across deployments
 
-## Step 3: Deploy Embedding Service (Official Nomic Image)
+## Step 3: Deploy Ollama Embedding Service
 
-Since your PostgreSQL data was embedded using `nomic-embed-text-v1.5`, you need to use the same model for queries. We'll use the official Nomic AI Docker image which has the model pre-built.
+Since your PostgreSQL data was embedded using `nomic-embed-text-v1.5`, you need to use the same model for queries. We'll use Ollama which is reliable and well-supported.
 
-### 3.1 Create Embeddings Service from Docker Image
+### 3.1 Create Ollama Service from Docker Image
 
 1. In your Railway project, click **"+ New"**
 2. Select **"Empty Service"**
-3. Name it "embeddings"
+3. Name it "ollama"
 4. Click on the service, go to **"Settings"** tab
 5. Under **"Source"**, change to **"Docker Image"**
-6. Enter: `ai/nomic-embed-text-v1.5:latest`
+6. Enter: `ollama/ollama:latest`
 
-That's it! The model is already included in the image (~261 MB).
+### 3.2 Add Ollama Volume (REQUIRED)
 
-### 3.2 Configure Resources (Optional)
+The volume stores downloaded models persistently:
 
-The Nomic embedding model is very lightweight:
-- **Recommended**: 1GB RAM (0.51 GiB VRAM needed)
+1. Go to **"Settings"** tab
+2. Under **"Volumes"**, click **"Add Volume"**
+3. Mount Path: `/root/.ollama`
+4. Click **"Add"**
+
+Without this volume, you'll need to re-download the model on every deployment!
+
+### 3.3 Wait for Service to Deploy
+
+The Ollama service will start successfully, but it won't have the model yet. Wait for the deployment to complete.
+
+### 3.4 Pull the Model Using Public URL
+
+The Railway CLI method doesn't work reliably for this, so we'll use the public API instead.
+
+**Step 1: Enable Public Networking**
+
+1. Go to your **ollama** service in Railway dashboard
+2. Click **"Settings"** → **"Networking"**
+3. Click **"Public Networking"** → **"Add a Public Domain"**
+4. When asked for port, enter: `11434`
+5. Copy the generated URL (e.g., `ollama-production-b069.up.railway.app`)
+
+**Step 2: Pull the Model**
+
+```bash
+curl -X POST https://your-ollama-url.up.railway.app/api/pull \
+  -H "Content-Type: application/json" \
+  -d '{"name": "nomic-embed-text:v1.5"}'
+```
+
+Replace `your-ollama-url.up.railway.app` with your actual URL.
+
+This will take 1-2 minutes to download the model (~274 MB). You'll see progress output:
+```json
+{"status":"pulling manifest"}
+{"status":"downloading...","completed":xxx,"total":xxx}
+```
+
+**Step 3: Verify the Model Downloaded**
+
+```bash
+curl https://your-ollama-url.up.railway.app/api/tags
+```
+
+You should see `nomic-embed-text:v1.5` in the models list.
+
+**Step 4: Disable Public Networking**
+
+Once verified, go back to **Settings** → **Networking** and remove the public domain for security.
+
+### 3.5 Configure Resources (Optional)
+
+Ollama with nomic-embed-text is lightweight:
+- **Recommended**: 2GB RAM minimum
 - **CPU**: 1 vCPU is sufficient
-- **No GPU needed**: CPU inference works well
-- **No volumes needed**: Model is pre-built into the image
+- **No GPU needed**: CPU inference works well for this model
 
-### 3.3 Verify Deployment
-
-Once the service is running, check the logs:
-1. Go to embeddings service → **"Deployments"**
-2. Click on the latest deployment
-3. Look for messages indicating the server is ready
-
-The service will be immediately available - no model download needed!
+Go to **"Settings"** → **"Resources"** to adjust if needed.
 
 ## Step 4: Deploy the Main Application
 
@@ -214,22 +259,22 @@ SEARCH_MODEL=claude-3-5-sonnet-20241022
 
 **Important**: Use the same model that was used to create the vectors in PostgreSQL.
 
-**Get the embeddings service internal URL:**
+**Get the Ollama service internal URL:**
 
-1. Go to your **embeddings service** in Railway
+1. Go to your **ollama service** in Railway
 2. Go to **"Settings"** → **"Networking"**
-3. Copy the **"Private Networking"** domain (e.g., `embeddings.railway.internal`)
+3. Copy the **"Private Networking"** domain (e.g., `ollama.railway.internal`)
 
 Then in your **app service**, set:
 ```
-EMBEDDING_BASE_URL=http://embeddings.railway.internal:12434/engines/llama.cpp/v1
-EMBEDDING_API_KEY=dummy
-EMBEDDING_MODEL=ai/nomic-embed-text-v1.5
+EMBEDDING_BASE_URL=http://ollama.railway.internal:11434/v1
+EMBEDDING_API_KEY=ollama
+EMBEDDING_MODEL=nomic-embed-text:v1.5
 ```
 
 **Notes**: 
-- Nomic's Docker Model Runner exposes an OpenAI-compatible API
-- Port 12434 is the default for Docker Model Runner
+- Ollama exposes an OpenAI-compatible API at `/v1/embeddings`
+- Port 11434 is Ollama's default port
 - The API key can be any value (no authentication required)
 - Use the internal `.railway.internal` domain for free service-to-service communication
 
@@ -247,8 +292,8 @@ EMBEDDING_MODEL=ai/nomic-embed-text-v1.5
 1. In the app service, go to **"Settings"** tab
 2. Under **"Service Dependencies"**, add both:
    - `postgres` service
-   - `embeddings` service
-3. This ensures PostgreSQL and the embeddings service start before the app
+   - `ollama` service
+3. This ensures PostgreSQL and Ollama start before the app
 
 ## Step 5: Deploy & Verify
 
@@ -272,18 +317,27 @@ In the logs, you should see:
 ✅ Database connected successfully
 ```
 
-### 5.4 Verify Embedding Service
+### 5.4 Verify Ollama Service
 
-Before accessing the app, verify the embedding service is working. Check the deployment logs for successful startup.
+Before accessing the app, verify Ollama is working.
 
-Or test the API directly (requires enabling public networking temporarily):
+**Check the model is downloaded** (if public networking is still enabled):
 ```bash
-curl -X POST http://your-embeddings-url.railway.app:12434/engines/llama.cpp/v1/embeddings \
+curl https://your-ollama-url.up.railway.app/api/tags
+```
+
+You should see `nomic-embed-text:v1.5` in the models list.
+
+**Test the embeddings API** (optional - if public networking is enabled):
+```bash
+curl -X POST https://your-ollama-url.up.railway.app/v1/embeddings \
   -H "Content-Type: application/json" \
-  -d '{"model": "ai/nomic-embed-text-v1.5", "input": "hello world!"}'
+  -d '{"model": "nomic-embed-text:v1.5", "input": "hello world"}'
 ```
 
 You should receive a JSON response with an embedding vector.
+
+**Remember to disable public networking** after verification for security!
 
 ### 5.5 Access Your Application
 
@@ -329,11 +383,11 @@ SEARCH_MODEL=gpt-4o
 # LLM_MODEL=claude-3-5-sonnet-20241022
 # SEARCH_MODEL=claude-3-5-sonnet-20241022
 
-# Embeddings (REQUIRED - using official Nomic AI service)
-# Get the internal domain from embeddings service networking settings
-EMBEDDING_BASE_URL=http://embeddings.railway.internal:12434/engines/llama.cpp/v1
-EMBEDDING_API_KEY=dummy
-EMBEDDING_MODEL=ai/nomic-embed-text-v1.5
+# Embeddings (REQUIRED - using Ollama service)
+# Get the internal domain from ollama service networking settings
+EMBEDDING_BASE_URL=http://ollama.railway.internal:11434/v1
+EMBEDDING_API_KEY=ollama
+EMBEDDING_MODEL=nomic-embed-text:v1.5
 ```
 
 ## Important Notes
@@ -379,19 +433,24 @@ Your PostgreSQL image comes pre-loaded with data, but you should still:
 3. Check PostgreSQL logs for initialization errors
 4. Ensure volume is mounted to `/var/lib/postgresql/data`
 
-### Embedding Service Issues
+### Ollama Service Issues
 
-**Service won't start:**
-1. Check embeddings service logs for errors
-2. Verify Docker image is: `ai/nomic-embed-text-v1.5:latest`
-3. Check service has enough memory (1GB minimum)
-4. The image is ~261 MB - ensure it downloaded completely
+**Service starts but model not found:**
+1. Enable public networking on ollama service (port 11434)
+2. Check if model was downloaded: `curl https://your-ollama-url.up.railway.app/api/tags`
+3. If not listed, pull it: `curl -X POST https://your-ollama-url.up.railway.app/api/pull -H "Content-Type: application/json" -d '{"name": "nomic-embed-text:v1.5"}'`
+4. Verify volume is mounted to `/root/.ollama`
+5. Check service has enough memory (2GB recommended)
+
+**Model keeps disappearing after redeploy:**
+- Volume is NOT mounted! Go to Settings → Volumes → Add `/root/.ollama`
+- Without volume, models are lost on every deployment
 
 **Embedding errors in app:**
-1. Get internal domain from embeddings service → Settings → Networking → Private Networking
-2. Verify EMBEDDING_BASE_URL: `http://embeddings.railway.internal:12434/engines/llama.cpp/v1`
-3. Check EMBEDDING_MODEL matches exactly: `ai/nomic-embed-text-v1.5`
-4. Ensure app service has dependency on embeddings service
+1. Get internal domain from ollama service → Settings → Networking → Private Networking
+2. Verify EMBEDDING_BASE_URL: `http://ollama.railway.internal:11434/v1`
+3. Check EMBEDDING_MODEL matches exactly: `nomic-embed-text:v1.5`
+4. Ensure app service has dependency on ollama service
 5. Test endpoint manually with curl (see verification section)
 
 ### Build Failures
@@ -435,10 +494,13 @@ Your PostgreSQL image comes pre-loaded with data, but you should still:
 - Verify credentials match (username, password, database name)
 
 **"Embedding model not found"**
-- Check embeddings service logs - model is pre-built, should start immediately
-- Verify Docker image is: `ai/nomic-embed-text-v1.5:latest`
-- Check EMBEDDING_MODEL is exactly: `ai/nomic-embed-text-v1.5`
-- Verify EMBEDDING_BASE_URL includes correct port: `:12434/engines/llama.cpp/v1`
+- Enable public networking on ollama service temporarily
+- Pull the model via curl: `curl -X POST https://your-ollama-url.up.railway.app/api/pull -H "Content-Type: application/json" -d '{"name": "nomic-embed-text:v1.5"}'`
+- Verify model exists: `curl https://your-ollama-url.up.railway.app/api/tags`
+- Check EMBEDDING_MODEL is exactly: `nomic-embed-text:v1.5`
+- Verify EMBEDDING_BASE_URL: `http://ollama.railway.internal:11434/v1`
+- Ensure volume is mounted to `/root/.ollama`
+- Disable public networking after model is downloaded
 
 **"Volume data lost after redeploy"**
 - Ensure volumes are created in **Settings** → **Volumes**
@@ -456,14 +518,20 @@ If you push a new version of your PostgreSQL image to Docker Hub:
 3. Click **"Redeploy"** to pull the latest version
 4. **Warning**: This won't affect existing data in the volume
 
-### Update Embedding Model
+### Update Ollama Model
 
 If you need to update or change the embedding model:
 
 1. **Warning**: Changing the model will break existing embeddings!
 2. You would need to re-index all data in PostgreSQL with the new model
-3. To use a different Nomic model version, update the Docker image tag in **"Settings"** → **"Source"**
-4. To use a completely different model, you'd need to switch to a different Docker image (Ollama, TEI, etc.)
+3. To update the same model version:
+   - Enable public networking on ollama service
+   - Run: `curl -X POST https://your-ollama-url.up.railway.app/api/pull -H "Content-Type: application/json" -d '{"name": "nomic-embed-text:v1.5"}'`
+   - Disable public networking
+4. To use a different model:
+   - Pull it via curl with the new model name
+   - Update EMBEDDING_MODEL in app service variables
+   - Re-index all PostgreSQL data with the new model
 
 ### Update Application Code
 
@@ -494,10 +562,10 @@ Railway pricing (as of 2025):
 
 **Hobby Plan (recommended for personal/small projects):**
 - PostgreSQL: ~$5-10 (1GB RAM, mostly idle)
-- Embeddings (TEI): ~$3-7 (1-2GB RAM, sporadic usage)
+- Ollama: ~$5-10 (2GB RAM, sporadic usage)
 - App: ~$3-8 (512MB-1GB RAM, depends on traffic)
 - **Subscription**: $5/month
-- **Total**: ~$16-30/month
+- **Total**: ~$18-33/month
 
 **Pro Plan (for production/higher traffic):**
 - Better resource guarantees
@@ -530,20 +598,23 @@ After deployment, test that embeddings are working:
 2. Try searching for philosophical concepts
 3. Verify that relevant results are returned
 
-### 2. Verify Embedding Service (Security)
+### 2. Verify Ollama Service (Security)
 
-The embeddings service should only be accessible internally:
-1. Go to embeddings service → **"Settings"**
-2. Under **"Networking"**, ensure **"Public Networking"** is disabled (unless you need external access)
-3. The app accesses it via internal domain (`${{embeddings.RAILWAY_PRIVATE_DOMAIN}}`)
+The Ollama service should only be accessible internally:
+1. Go to ollama service → **"Settings"**
+2. Under **"Networking"**, ensure **"Public Networking"** is disabled
+3. The app accesses it via internal domain (e.g., `ollama.railway.internal`)
+4. Model persists in the volume at `/root/.ollama`
+
+**Note:** Only enable public networking temporarily if you need to pull new models or troubleshoot.
 
 ### 3. Monitor Resource Usage
 
 Check your usage in Railway dashboard:
 - Services should idle at low resource usage
-- Nomic embedding service will spike when processing requests
+- Ollama will spike when processing embeddings (~30-50ms per request)
 - PostgreSQL should remain relatively constant
-- Nomic keeps model in memory, so base memory usage ~512MB
+- Ollama keeps model in memory, so base memory usage ~500-800MB
 
 ### 4. Set Up Alerts (Optional)
 
@@ -554,13 +625,13 @@ Railway Pro plan offers:
 
 ## Performance Optimization
 
-### Nomic Embedding Performance
+### Ollama Embedding Performance
 
-- **Model pre-built**: Model is included in the Docker image (261 MB)
-- **Fast inference**: CPU inference is quick for this lightweight model (~50ms per request)
-- **Low memory**: Only requires ~512 MB VRAM
-- **No cold starts**: Model is ready immediately after service starts
-- **No download needed**: Unlike Ollama or TEI, no model download on first start
+- **Model stays loaded**: Ollama keeps the model in memory after first use
+- **Fast inference**: CPU inference is quick for this lightweight model (~30-50ms per request)
+- **Low memory**: Base usage ~500-800MB with model loaded
+- **Cold starts**: First request after idle may take 1-2 seconds to load model
+- **Persistent models**: With volume, models survive deployments
 
 ### Database Performance
 
@@ -594,7 +665,7 @@ If needed, override in **"Settings"** → **"Deploy"** → **"Start Command"**
 
 Recommended minimum resources:
 - **PostgreSQL**: 1GB RAM, 1 vCPU
-- **Nomic Embeddings**: 1GB RAM, 1 vCPU (model is ~261 MB pre-built)
+- **Ollama**: 2GB RAM, 1 vCPU (model is ~274 MB, needs overhead)
 - **App**: 512MB RAM, 0.5 vCPU
 
 ## Why Railway for This Project?
@@ -636,7 +707,7 @@ railway link
 # View logs for a specific service
 railway logs --service app
 railway logs --service postgres
-railway logs --service embeddings
+railway logs --service ollama
 
 # Execute commands in a service
 railway run --service ollama ollama list
@@ -686,15 +757,26 @@ railway run --service postgres psql -U postgres -d philosophizer
 railway run --service postgres psql -U postgres -d philosophizer -c "SELECT COUNT(*) FROM philosopher_text_chunks;"
 ```
 
-### Test Embedding Service
+### Test Ollama Service
+
+To interact with Ollama, enable public networking temporarily:
 
 ```bash
-# List models
-railway run --service ollama ollama list
+# List downloaded models
+curl https://your-ollama-url.up.railway.app/api/tags
 
-# Test embedding generation
-railway run --service ollama ollama run nomic-embed-text:v1.5 "test embedding"
+# Test embeddings API
+curl -X POST https://your-ollama-url.up.railway.app/v1/embeddings \
+  -H "Content-Type: application/json" \
+  -d '{"model": "nomic-embed-text:v1.5", "input": "test"}'
+
+# Pull a model (if needed)
+curl -X POST https://your-ollama-url.up.railway.app/api/pull \
+  -H "Content-Type: application/json" \
+  -d '{"name": "nomic-embed-text:v1.5"}'
 ```
+
+**Remember to disable public networking after testing!**
 
 ## Support
 
@@ -752,11 +834,13 @@ Use this checklist to ensure everything is configured correctly:
 - [ ] Volume mounted to `/var/lib/postgresql/data`
 - [ ] Service is running and healthy
 
-### Embeddings Service
-- [ ] Service created with Docker image: `ai/nomic-embed-text-v1.5:latest`
-- [ ] Service deployed successfully (model is pre-built)
-- [ ] Deployment logs show service is running
-- [ ] Public networking disabled (recommended for security)
+### Ollama Service
+- [ ] Service created with Docker image: `ollama/ollama:latest`
+- [ ] Volume mounted to `/root/.ollama`
+- [ ] Public networking enabled temporarily (port 11434)
+- [ ] Model `nomic-embed-text:v1.5` downloaded via curl API
+- [ ] Model verified with `curl https://your-ollama-url.up.railway.app/api/tags`
+- [ ] Public networking disabled after model download (security)
 
 ### App Service
 - [ ] Connected to GitHub repository
@@ -764,8 +848,8 @@ Use this checklist to ensure everything is configured correctly:
   - [ ] DATABASE_URL (using postgres service reference)
   - [ ] JWT_SECRET (secure, generated)
   - [ ] OPENAI_API_KEY or ANTHROPIC_API_KEY
-  - [ ] EMBEDDING_BASE_URL (using embeddings service reference with port 12434)
-  - [ ] EMBEDDING_MODEL set to `ai/nomic-embed-text-v1.5`
+  - [ ] EMBEDDING_BASE_URL (using ollama service internal domain with port 11434)
+  - [ ] EMBEDDING_MODEL set to `nomic-embed-text:v1.5`
   - [ ] ADMIN_EMAILS set
   - [ ] HOSTNAME set to `0.0.0.0` (required for Railway access)
   - [ ] PORT set to `1738`
@@ -788,7 +872,7 @@ Use this checklist to ensure everything is configured correctly:
 | Service | Image | Size | Notes |
 |---------|-------|------|-------|
 | PostgreSQL | `mjweaver01/philosophizer-pgv-hqe:latest` | Custom | Pre-loaded with vector data |
-| Embeddings | `ai/nomic-embed-text-v1.5:latest` | 261 MB | Official Nomic AI image |
+| Ollama | `ollama/ollama:latest` | ~1GB | Requires model pull after deploy |
 | App | Built from GitHub | Varies | Bun application |
 
 ### Key Ports
@@ -796,7 +880,7 @@ Use this checklist to ensure everything is configured correctly:
 | Service | Port | Access |
 |---------|------|--------|
 | PostgreSQL | 5432 | Internal only |
-| Embeddings | 12434 | Internal only |
+| Ollama | 11434 | Internal only |
 | App | 1738 | Public (via Railway URL) |
 
 ### Critical Environment Variables
@@ -810,9 +894,9 @@ NODE_ENV=production
 # Database (get from postgres service "Connect" tab)
 DATABASE_URL=postgresql://postgres:postgres@postgres.railway.internal:5432/philosophizer
 
-# Embeddings (get internal domain from embeddings service networking)
-EMBEDDING_BASE_URL=http://embeddings.railway.internal:12434/engines/llama.cpp/v1
-EMBEDDING_MODEL=ai/nomic-embed-text-v1.5
+# Embeddings (get internal domain from ollama service networking)
+EMBEDDING_BASE_URL=http://ollama.railway.internal:11434/v1
+EMBEDDING_MODEL=nomic-embed-text:v1.5
 ```
 
 ### Service Dependencies
@@ -820,7 +904,7 @@ EMBEDDING_MODEL=ai/nomic-embed-text-v1.5
 ```
 app
 ├── depends on: postgres
-└── depends on: embeddings
+└── depends on: ollama
 ```
 
 ---
