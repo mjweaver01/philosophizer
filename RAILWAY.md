@@ -153,11 +153,23 @@ The service will be immediately available - no model download needed!
 In the app service, go to **"Variables"** tab and add these variables:
 
 #### Database Configuration
+
+**Get the connection string from your postgres service:**
+
+1. Go to your **postgres service** in Railway
+2. Go to **"Connect"** tab
+3. Look for **"Private Network URL"** or **"DATABASE_PRIVATE_URL"**
+4. Copy the full connection string (it looks like: `postgresql://postgres:password@postgres.railway.internal:5432/philosophizer`)
+
+Then in your **app service**, set:
 ```
-DATABASE_URL=postgresql://${{postgres.POSTGRES_USER}}:${{postgres.POSTGRES_PASSWORD}}@${{postgres.PRIVATE_DOMAIN}}:5432/${{postgres.POSTGRES_DB}}
+DATABASE_URL=postgresql://postgres:postgres@postgres.railway.internal:5432/philosophizer
 ```
 
-**Note**: Railway's template syntax `${{postgres.VARIABLE_NAME}}` automatically references the postgres service's variables and internal domain.
+**Important**: 
+- Use the **internal** domain (ends with `.railway.internal`), not the public one
+- The format is: `postgresql://username:password@host:5432/database`
+- Replace with your actual postgres password if you changed it
 
 #### Server Configuration
 ```
@@ -202,8 +214,15 @@ SEARCH_MODEL=claude-3-5-sonnet-20241022
 
 **Important**: Use the same model that was used to create the vectors in PostgreSQL.
 
+**Get the embeddings service internal URL:**
+
+1. Go to your **embeddings service** in Railway
+2. Go to **"Settings"** → **"Networking"**
+3. Copy the **"Private Networking"** domain (e.g., `embeddings.railway.internal`)
+
+Then in your **app service**, set:
 ```
-EMBEDDING_BASE_URL=http://${{embeddings.RAILWAY_PRIVATE_DOMAIN}}:12434/engines/llama.cpp/v1
+EMBEDDING_BASE_URL=http://embeddings.railway.internal:12434/engines/llama.cpp/v1
 EMBEDDING_API_KEY=dummy
 EMBEDDING_MODEL=ai/nomic-embed-text-v1.5
 ```
@@ -212,7 +231,7 @@ EMBEDDING_MODEL=ai/nomic-embed-text-v1.5
 - Nomic's Docker Model Runner exposes an OpenAI-compatible API
 - Port 12434 is the default for Docker Model Runner
 - The API key can be any value (no authentication required)
-- The internal URL uses `${{embeddings.RAILWAY_PRIVATE_DOMAIN}}` for fast, free service-to-service communication
+- Use the internal `.railway.internal` domain for free service-to-service communication
 
 ### 4.3 Configure Service Settings
 
@@ -284,8 +303,8 @@ You should receive a JSON response with an embedding vector.
 Here's a complete template for your app service variables:
 
 ```bash
-# Database
-DATABASE_URL=postgresql://${{postgres.POSTGRES_USER}}:${{postgres.POSTGRES_PASSWORD}}@${{postgres.PRIVATE_DOMAIN}}:5432/${{postgres.POSTGRES_DB}}
+# Database (get this from postgres service "Connect" tab)
+DATABASE_URL=postgresql://postgres:postgres@postgres.railway.internal:5432/philosophizer
 
 # Server
 PORT=1738
@@ -311,7 +330,8 @@ SEARCH_MODEL=gpt-4o
 # SEARCH_MODEL=claude-3-5-sonnet-20241022
 
 # Embeddings (REQUIRED - using official Nomic AI service)
-EMBEDDING_BASE_URL=http://${{embeddings.RAILWAY_PRIVATE_DOMAIN}}:12434/engines/llama.cpp/v1
+# Get the internal domain from embeddings service networking settings
+EMBEDDING_BASE_URL=http://embeddings.railway.internal:12434/engines/llama.cpp/v1
 EMBEDDING_API_KEY=dummy
 EMBEDDING_MODEL=ai/nomic-embed-text-v1.5
 ```
@@ -368,10 +388,11 @@ Your PostgreSQL image comes pre-loaded with data, but you should still:
 4. The image is ~261 MB - ensure it downloaded completely
 
 **Embedding errors in app:**
-1. Verify EMBEDDING_BASE_URL includes port: `http://${{embeddings.RAILWAY_PRIVATE_DOMAIN}}:12434/engines/llama.cpp/v1`
-2. Check EMBEDDING_MODEL matches exactly: `ai/nomic-embed-text-v1.5`
-3. Ensure app service has dependency on embeddings service
-4. Test endpoint manually with curl (see verification section)
+1. Get internal domain from embeddings service → Settings → Networking → Private Networking
+2. Verify EMBEDDING_BASE_URL: `http://embeddings.railway.internal:12434/engines/llama.cpp/v1`
+3. Check EMBEDDING_MODEL matches exactly: `ai/nomic-embed-text-v1.5`
+4. Ensure app service has dependency on embeddings service
+5. Test endpoint manually with curl (see verification section)
 
 ### Build Failures
 
@@ -407,20 +428,17 @@ Your PostgreSQL image comes pre-loaded with data, but you should still:
 ### First-Time Deployment Issues
 
 **"Cannot connect to database"**
-- Verify DATABASE_URL uses `${{postgres.PRIVATE_DOMAIN}}`
+- Get DATABASE_URL from postgres service → "Connect" tab → "Private Network URL"
+- Use the internal domain (ends with `.railway.internal`)
+- Format: `postgresql://postgres:password@postgres.railway.internal:5432/philosophizer`
 - Check postgres service is running
-- Verify credentials match
+- Verify credentials match (username, password, database name)
 
 **"Embedding model not found"**
 - Check embeddings service logs - model is pre-built, should start immediately
 - Verify Docker image is: `ai/nomic-embed-text-v1.5:latest`
 - Check EMBEDDING_MODEL is exactly: `ai/nomic-embed-text-v1.5`
 - Verify EMBEDDING_BASE_URL includes correct port: `:12434/engines/llama.cpp/v1`
-
-**"Service variables not resolving"**
-- Variable syntax must be: `${{service-name.VARIABLE_NAME}}`
-- Service dependencies must be set
-- Try redeploying the app service
 
 **"Volume data lost after redeploy"**
 - Ensure volumes are created in **Settings** → **Volumes**
@@ -789,9 +807,11 @@ HOSTNAME=0.0.0.0
 PORT=1738
 NODE_ENV=production
 
-# App connects to these internal services
-DATABASE_URL=postgresql://${{postgres.POSTGRES_USER}}:${{postgres.POSTGRES_PASSWORD}}@${{postgres.PRIVATE_DOMAIN}}:5432/${{postgres.POSTGRES_DB}}
-EMBEDDING_BASE_URL=http://${{embeddings.RAILWAY_PRIVATE_DOMAIN}}:12434/engines/llama.cpp/v1
+# Database (get from postgres service "Connect" tab)
+DATABASE_URL=postgresql://postgres:postgres@postgres.railway.internal:5432/philosophizer
+
+# Embeddings (get internal domain from embeddings service networking)
+EMBEDDING_BASE_URL=http://embeddings.railway.internal:12434/engines/llama.cpp/v1
 EMBEDDING_MODEL=ai/nomic-embed-text-v1.5
 ```
 
