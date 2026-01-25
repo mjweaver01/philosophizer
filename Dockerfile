@@ -52,6 +52,7 @@ RUN mkdir -p /app/secrets && \
 # Copy application files
 COPY --from=builder --chown=bunjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=bunjs:nodejs /app/src ./src
+COPY --from=builder --chown=bunjs:nodejs /app/public ./public
 COPY --from=builder --chown=bunjs:nodejs /app/package.json ./
 COPY --from=builder --chown=bunjs:nodejs /app/tsconfig.json ./
 COPY --from=builder --chown=bunjs:nodejs /app/bunfig.toml ./
