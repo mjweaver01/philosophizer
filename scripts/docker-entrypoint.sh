@@ -140,9 +140,17 @@ init_secrets() {
 
 # Wait for PostgreSQL to be ready
 wait_for_postgres() {
+    # If DATABASE_URL is not set, try to construct it from individual components
     if [[ -z "${DATABASE_URL:-}" ]]; then
-        log_warn "DATABASE_URL not set, skipping postgres check"
-        return 0
+        if [[ -n "${POSTGRES_USER:-}" ]] && [[ -n "${POSTGRES_PASSWORD:-}" ]] && [[ -n "${POSTGRES_DB:-}" ]]; then
+            # Construct DATABASE_URL from docker-compose environment variables
+            export DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
+            log_info "Constructed DATABASE_URL from environment variables"
+        else
+            log_warn "DATABASE_URL not set and cannot construct from env vars"
+            log_warn "Available: POSTGRES_USER=${POSTGRES_USER:-'not set'}, POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-'not set'}, POSTGRES_DB=${POSTGRES_DB:-'not set'}"
+            return 0
+        fi
     fi
     
     log_info "Waiting for PostgreSQL to be ready..."
