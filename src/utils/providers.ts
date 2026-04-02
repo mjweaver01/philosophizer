@@ -104,6 +104,14 @@ async function initializeModelProviders() {
       defaultSystemPrompt,
       costPerToken: { prompt: 0, completion: 0 },
     },
+    {
+      id: 'qwen/qwen3.5-9b',
+      name: 'Qwen3.5 9B (LMStudio)',
+      available: true,
+      model: lmstudio('qwen/qwen3.5-9b'),
+      defaultSystemPrompt,
+      costPerToken: { prompt: 0, completion: 0 },
+    },
   ];
 }
 
