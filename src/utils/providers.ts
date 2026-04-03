@@ -1,6 +1,6 @@
 import type { LanguageModel } from 'ai';
 import { openai, createOpenAI } from '@ai-sdk/openai';
-import { anthropic } from '@ai-sdk/anthropic';
+import { anthropic, type AnthropicProviderOptions } from '@ai-sdk/anthropic';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import {
   EMBEDDING_BASE_URL,
@@ -37,6 +37,58 @@ const checkApiKey = (key: string | undefined, provider: string): boolean => {
   }
   return exists;
 };
+
+/**
+ * Helper to create Anthropic models with extended thinking enabled.
+ *
+ * Extended thinking allows Claude to perform deeper reasoning by allocating
+ * additional computational effort. The reasoning process is exposed as thinking
+ * blocks in the response, which the frontend can display separately.
+ *
+ * @param modelId - The Anthropic model ID (e.g., 'claude-sonnet-4-5-20250929')
+ * @param budgetTokens - Maximum tokens allocated for thinking (default: 10000)
+ * @returns A language model configured with extended thinking enabled
+ */
+function createAnthropicModelWithThinking(
+  modelId: string,
+  budgetTokens: number = 10000
+): LanguageModel {
+  const baseModel = anthropic(modelId);
+
+  // Wrap the model to inject thinking configuration into every call
+  // Note: Use Object.create to preserve prototype getters like supportedUrls,
+  // which are lost when using object spread on class instances.
+  return Object.assign(
+    Object.create(Object.getPrototypeOf(baseModel)),
+    baseModel,
+    {
+      doGenerate: async (options: any) => {
+        return baseModel.doGenerate({
+          ...options,
+          providerOptions: {
+            ...options.providerOptions,
+            anthropic: {
+              thinking: { type: 'enabled' as const, budgetTokens },
+              ...options.providerOptions?.anthropic,
+            } satisfies AnthropicProviderOptions,
+          },
+        });
+      },
+      doStream: async (options: any) => {
+        return baseModel.doStream({
+          ...options,
+          providerOptions: {
+            ...options.providerOptions,
+            anthropic: {
+              thinking: { type: 'enabled' as const, budgetTokens },
+              ...options.providerOptions?.anthropic,
+            } satisfies AnthropicProviderOptions,
+          },
+        });
+      },
+    }
+  ) as LanguageModel;
+}
 
 // Lazy initialization to avoid module load time evaluation
 let _modelProviders: ModelProvider[] | null = null;
@@ -89,13 +141,15 @@ async function initializeModelProviders() {
       defaultSystemPrompt,
       costPerToken: { prompt: 10, completion: 30 },
     },
-    // {
-    //   id: "claude-4.5-sonnet",
-    //   name: "Claude 4.5 Sonnet (Anthropic)",
-    //   available: checkApiKey(process.env.ANTHROPIC_API_KEY, "ANTHROPIC"),
-    //   model: anthropic("claude-sonnet-4-5-20250929"),
-    //   defaultSystemPrompt,
-    // },
+    {
+      id: 'claude-4.6-sonnet',
+      name: 'Claude 4.6 Sonnet (Anthropic)',
+      available: checkApiKey(process.env.ANTHROPIC_API_KEY, 'ANTHROPIC'),
+      model: createAnthropicModelWithThinking('claude-sonnet-4-6', 10000),
+      // per 1M tokens - verified Jan 2025
+      costPerToken: { prompt: 3, completion: 15 },
+      defaultSystemPrompt,
+    },
     {
       id: 'qwen/qwen3-1.7b',
       name: 'Qwen3 1.7B (LMStudio)',
