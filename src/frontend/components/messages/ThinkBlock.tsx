@@ -1,12 +1,20 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface ThinkBlockProps {
   content: string;
   isStreaming?: boolean;
+  showOpenByDefault?: boolean;
 }
 
-export function ThinkBlock({ content, isStreaming = false }: ThinkBlockProps) {
+export function ThinkBlock({
+  content,
+  isStreaming = false,
+  showOpenByDefault = false,
+}: ThinkBlockProps) {
   const contentRef = useRef<HTMLDivElement>(null);
+  const shouldBeOpen = isStreaming || showOpenByDefault;
+  const [isOpen, setIsOpen] = useState(shouldBeOpen);
+  const prevShowOpenByDefault = useRef(showOpenByDefault);
 
   useEffect(() => {
     if (isStreaming && contentRef.current) {
@@ -14,10 +22,30 @@ export function ThinkBlock({ content, isStreaming = false }: ThinkBlockProps) {
     }
   }, [content, isStreaming]);
 
+  // Auto-close when showOpenByDefault flips true → false
+  useEffect(() => {
+    if (prevShowOpenByDefault.current && !showOpenByDefault) {
+      setIsOpen(false);
+    }
+    prevShowOpenByDefault.current = showOpenByDefault;
+  }, [showOpenByDefault]);
+
+  // Auto-open when streaming starts
+  useEffect(() => {
+    if (shouldBeOpen && !isOpen) {
+      setIsOpen(true);
+    }
+  }, [shouldBeOpen, isOpen]);
+
+  const handleToggle = (e: React.SyntheticEvent<HTMLDetailsElement>) => {
+    setIsOpen(e.currentTarget.open);
+  };
+
   return (
     <details
       className="my-3 first:mt-0 group bg-surface-secondary border border-border rounded-lg"
-      open={isStreaming}
+      open={isOpen}
+      onToggle={handleToggle}
     >
       <summary className="cursor-pointer text-sm text-text-muted hover:text-text flex items-center gap-2 px-3 py-2 transition-colors">
         <svg

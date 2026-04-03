@@ -147,6 +147,7 @@ export function Messages({
                       message={message}
                       showActions={shouldShowActions}
                       onRegenerateLastMessage={onRegenerateLastMessage}
+                      isLastMessage={isLastMessage}
                     />
                   )}
                 </div>

@@ -14,12 +14,14 @@ interface AssistantMessageProps {
   message: any;
   showActions?: boolean;
   onRegenerateLastMessage?: () => void;
+  isLastMessage?: boolean;
 }
 
 export function AssistantMessage({
   message,
   showActions = false,
   onRegenerateLastMessage,
+  isLastMessage = false,
 }: AssistantMessageProps) {
   // Helper to extract text content from message
   const getTextContent = (): string => {
@@ -37,10 +39,26 @@ export function AssistantMessage({
 
   // Handle parts-based messages
   if ('parts' in message && Array.isArray(message.parts)) {
+    // Find the last visible part index (skip step-start)
+    let lastVisiblePartIndex = -1;
+    for (let i = message.parts.length - 1; i >= 0; i--) {
+      const part = message.parts[i];
+      if (part && part.type !== 'step-start') {
+        lastVisiblePartIndex = i;
+        break;
+      }
+    }
+
     return (
       <>
         {message.parts.map((part: any, index: number) => (
-          <MessagePart key={`part-${index}`} part={part} index={index} />
+          <MessagePart
+            key={`part-${index}`}
+            part={part}
+            index={index}
+            isLastMessage={isLastMessage}
+            isLastPart={index === lastVisiblePartIndex}
+          />
         ))}
         {showActions && (
           <MessageActions
@@ -73,9 +91,11 @@ export function AssistantMessage({
 interface MessagePartProps {
   part: any;
   index: number;
+  isLastMessage?: boolean;
+  isLastPart?: boolean;
 }
 
-function MessagePart({ part, index }: MessagePartProps) {
+function MessagePart({ part, index, isLastMessage = false, isLastPart = false }: MessagePartProps) {
   // Skip step-start parts and dynamic-tool parts
   if (part.type === 'step-start' || part.type === 'dynamic-tool') {
     return null;
@@ -83,12 +103,12 @@ function MessagePart({ part, index }: MessagePartProps) {
 
   // Handle reasoning/thinking parts (OpenAI o1/o3, Anthropic Claude)
   if ((part.type === 'reasoning' || part.type === 'thinking') && part.text) {
-    return <ReasoningPart text={part.text} index={index} />;
+    return <ReasoningPart text={part.text} index={index} isLastMessage={isLastMessage} isLastPart={isLastPart} />;
   }
 
   // Handle text parts
   if (part.type === 'text' && part.text) {
-    return <TextPart text={part.text} index={index} />;
+    return <TextPart text={part.text} index={index} isLastMessage={isLastMessage} isLastPart={isLastPart} />;
   }
 
   // Handle tool call parts
@@ -104,20 +124,28 @@ function MessagePart({ part, index }: MessagePartProps) {
 interface ReasoningPartProps {
   text: string;
   index: number;
+  isLastMessage?: boolean;
+  isLastPart?: boolean;
 }
 
-function ReasoningPart({ text, index }: ReasoningPartProps) {
-  // Reasoning/thinking parts from models (OpenAI o1/o3, Anthropic Claude) are already separated
-  // Just render them in a ThinkBlock
-  return <ThinkBlock content={text} isStreaming={false} />;
+function ReasoningPart({ text, isLastMessage = false, isLastPart = false }: ReasoningPartProps) {
+  return (
+    <ThinkBlock
+      content={text}
+      isStreaming={isLastMessage && isLastPart}
+      showOpenByDefault={isLastMessage && isLastPart}
+    />
+  );
 }
 
 interface TextPartProps {
   text: string;
   index: number;
+  isLastMessage?: boolean;
+  isLastPart?: boolean;
 }
 
-function TextPart({ text, index }: TextPartProps) {
+function TextPart({ text, isLastMessage = false, isLastPart = false }: TextPartProps) {
   const { thinkBlocks, cleanText, hasOpenThink } =
     processTextWithThinkBlocks(text);
 
@@ -137,12 +165,14 @@ function TextPart({ text, index }: TextPartProps) {
       {thinkBlocks.map((thinkContent, thinkIndex) => {
         const isLastBlock = thinkIndex === thinkBlocks.length - 1;
         const isStreaming = isLastBlock && hasOpenThink;
+        const showOpenByDefault = isLastMessage && isLastPart && isLastBlock && !cleanText;
 
         return (
           <ThinkBlock
             key={`think-${thinkIndex}`}
             content={thinkContent}
             isStreaming={isStreaming}
+            showOpenByDefault={showOpenByDefault}
           />
         );
       })}

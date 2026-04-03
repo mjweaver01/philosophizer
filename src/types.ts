@@ -1,31 +1,33 @@
-export interface AskRequest {
-  messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>;
-  systemPrompt?: string;
-}
-
-export interface AskResponse {
-  answer: string;
-  took_ms: number;
-  messages?: Message[];
-}
+import type { UIMessage, UIMessagePart, UIDataTypes, UITools } from 'ai';
 
 export interface AgentRequest {
-  messages: Message[];
+  messages: ConversationMessage[];
   philosopherId?: string;
 }
 
-export interface ToolCall {
-  toolCallId: string;
-  toolName: string;
-  args: Record<string, unknown>;
-  result?: string;
-  state?: 'call' | 'result' | 'partial-call';
+/**
+ * Conversation message type with database fields
+ * Extends AI SDK's UIMessage with timestamp and content fields for DB support
+ */
+export interface ConversationMessage extends UIMessage {
+  timestamp: string;
+  content: string;
 }
 
-export interface Message {
+/**
+ * Message part type with database fields
+ */
+export type MessagePart = UIMessagePart<UIDataTypes, UITools>;
+
+/**
+ * Conversation type with database fields
+ */
+export interface Conversation {
   id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-  toolCalls?: ToolCall[];
+  userId: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  modelName?: string | null;
+  messages?: ConversationMessage[];
 }

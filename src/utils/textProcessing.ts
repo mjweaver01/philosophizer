@@ -1,3 +1,5 @@
+import type { MessagePart } from '../types';
+
 export interface ProcessedText {
   thinkBlocks: string[];
   cleanText: string;
@@ -59,17 +61,20 @@ export function isToolCallJSON(text: string): boolean {
 }
 
 /**
- * Extract tool name from part type
+ * Extract tool name from part
  */
-export function extractToolName(part: any): string {
-  return (
-    part.name ||
-    part.type
-      .replace('tool-', '')
-      .replace('tool-call', 'call')
-      .replace('tool-invocation', 'invocation')
-      .replace('tool-execution', 'execution')
-  );
+export function extractToolName(part: MessagePart): string {
+  // DynamicToolUIPart has toolName property
+  if ('toolName' in part && typeof part.toolName === 'string') {
+    return part.toolName;
+  }
+
+  // For other tool parts, extract from type string
+  return part.type
+    .replace('tool-', '')
+    .replace('tool-call', 'call')
+    .replace('tool-invocation', 'invocation')
+    .replace('tool-execution', 'execution');
 }
 
 /**
@@ -80,26 +85,40 @@ export function isToolCallPart(partType: string): boolean {
     partType.startsWith('tool-') ||
     partType === 'tool-call' ||
     partType === 'tool-invocation' ||
-    partType === 'tool-execution'
+    partType === 'tool-execution' ||
+    partType === 'dynamic-tool'
   );
 }
 
-const GENERIC_TOOL_NAMES = new Set([
-  '',
-  'call',
-  'invocation',
-  'execution',
-  'tool',
-]);
-
 /**
- * Check if a tool call part has enough data to render.
- * During streaming, early chunks may arrive with no name/input yet.
+ * Check if a tool call part has a valid tool name and content to display.
+ * Prevents rendering empty/incomplete tool calls during early streaming.
  */
-export function hasValidToolCallPart(part: any): boolean {
-  const name = (part.toolName ?? part.name ?? '').trim();
-  if (!name || GENERIC_TOOL_NAMES.has(name)) return false;
-  return !!(part.input || part.state || part.output);
+export function hasValidToolCallPart(part: MessagePart): boolean {
+  let hasToolName = false;
+
+  // Check for explicit toolName property
+  if ('toolName' in part && part.toolName && typeof part.toolName === 'string') {
+    hasToolName = true;
+  }
+  // Check if we can extract a meaningful name from the type
+  else if (part.type && typeof part.type === 'string') {
+    const typeBasedName = part.type.replace(/^tool-/, '');
+    hasToolName =
+      typeBasedName.length > 0 &&
+      typeBasedName !== 'call' &&
+      typeBasedName !== 'invocation' &&
+      typeBasedName !== 'execution';
+  }
+
+  if (!hasToolName) return false;
+
+  // Require some actual data to prevent flashing empty tool calls
+  const hasInput = 'input' in part && part.input !== undefined && part.input !== null;
+  const hasState = 'state' in part && Boolean(part.state);
+  const hasOutput = 'output' in part && part.output !== undefined && part.output !== null;
+
+  return hasInput || hasState || hasOutput;
 }
 
 /**
