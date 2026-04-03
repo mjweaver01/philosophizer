@@ -6,6 +6,7 @@ import {
   isToolCallJSON,
   extractToolName,
   isToolCallPart,
+  hasValidToolCallPart,
 } from '../../../utils/textProcessing';
 import { MessageActions } from './MessageActions';
 
@@ -92,6 +93,7 @@ function MessagePart({ part, index }: MessagePartProps) {
 
   // Handle tool call parts
   if (part.type && typeof part.type === 'string' && isToolCallPart(part.type)) {
+    if (!hasValidToolCallPart(part)) return null;
     return <ToolPart part={part} index={index} />;
   }
 

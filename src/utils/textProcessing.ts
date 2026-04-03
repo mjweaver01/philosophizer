@@ -84,6 +84,24 @@ export function isToolCallPart(partType: string): boolean {
   );
 }
 
+const GENERIC_TOOL_NAMES = new Set([
+  '',
+  'call',
+  'invocation',
+  'execution',
+  'tool',
+]);
+
+/**
+ * Check if a tool call part has enough data to render.
+ * During streaming, early chunks may arrive with no name/input yet.
+ */
+export function hasValidToolCallPart(part: any): boolean {
+  const name = (part.toolName ?? part.name ?? '').trim();
+  if (!name || GENERIC_TOOL_NAMES.has(name)) return false;
+  return !!(part.input || part.state || part.output);
+}
+
 /**
  * Format tool name for display
  */
