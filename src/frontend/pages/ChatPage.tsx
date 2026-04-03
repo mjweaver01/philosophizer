@@ -11,8 +11,8 @@ import { TRADITION_GROUP_MAP } from '../../constants/traditions';
 import { ChatInput } from '../components/ChatInput';
 import { ConversationSidebar } from '../components/ConversationSidebar';
 import { ChatSettingsModal } from '../components/ChatSettingsModal';
-import { useAutoScroll } from '../hooks/useAutoScroll';
 import { useConversations } from '../hooks/useConversations';
+import { Conversation, ConversationContent } from '../components/Conversation';
 import { PHILOSOPHERS } from '../../constants/philosophers';
 import { NavigationButtons } from '../components/NavigationButtons';
 
@@ -130,12 +130,6 @@ export function ChatPage() {
       ]);
     },
   });
-
-  const { scrollContainerRef, handleScroll, enableAutoScroll } = useAutoScroll(
-    messages,
-    currentConversation?.id,
-    status
-  );
 
   const isProcessing = status === 'submitted' || status === 'streaming';
 
@@ -291,7 +285,6 @@ export function ChatPage() {
 
     const messageContent = input;
     setInput('');
-    enableAutoScroll();
 
     sendMessage({
       role: 'user',
@@ -306,8 +299,6 @@ export function ChatPage() {
     if (!currentConversation) {
       await createConversation();
     }
-
-    enableAutoScroll();
 
     sendMessage({
       role: 'user',
@@ -382,15 +373,12 @@ export function ChatPage() {
       return;
     }
 
-    // Enable auto-scroll for the new response
-    enableAutoScroll();
-
     // Resend the last user message (keeping all previous messages)
     sendMessage({
       role: 'user',
       parts: [{ type: 'text', text: messageContent }],
     } as any);
-  }, [messages, isProcessing, enableAutoScroll, sendMessage]);
+  }, [messages, isProcessing, sendMessage]);
 
   const MenuButton = () => (
     <button
@@ -494,23 +482,26 @@ export function ChatPage() {
         </div>
 
         {/* Messages */}
-        <div
-          ref={scrollContainerRef}
-          onScroll={handleScroll}
-          className="flex-1 overflow-y-auto"
-        >
-          <div className="flex flex-col max-w-3xl mx-auto px-4">
-            <Messages
-              messages={messages}
-              status={status}
-              starterQuestions={randomQuestions}
-              onStarterQuestion={handleStarterQuestion}
-              onRegenerateLastMessage={handleRegenerateLastMessage}
-              philosopherNames={selectedPhilosophers
-                .map(id => PHILOSOPHERS[id]?.name)
-                .filter((name): name is string => !!name)}
-            />
-          </div>
+        <div className="flex-1 overflow-hidden relative">
+          <Conversation
+            className="h-full"
+            showScrollButton={messages.length > 0}
+          >
+            <ConversationContent>
+              <div className="flex flex-col max-w-3xl mx-auto px-4">
+                <Messages
+                  messages={messages}
+                  status={status}
+                  starterQuestions={randomQuestions}
+                  onStarterQuestion={handleStarterQuestion}
+                  onRegenerateLastMessage={handleRegenerateLastMessage}
+                  philosopherNames={selectedPhilosophers
+                    .map(id => PHILOSOPHERS[id]?.name)
+                    .filter((name): name is string => !!name)}
+                />
+              </div>
+            </ConversationContent>
+          </Conversation>
         </div>
 
         {/* Input */}
