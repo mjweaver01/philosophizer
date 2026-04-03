@@ -13,6 +13,7 @@ export interface Conversation {
   title: string;
   createdAt: string;
   updatedAt: string;
+  isFavorite?: boolean;
   messages?: ConversationMessage[];
 }
 
@@ -41,6 +42,12 @@ export function useConversations() {
       });
       if (!response.ok) throw new Error('Failed to fetch conversations');
       const data = await response.json();
+      // Sort: favorites first, then by updatedAt descending
+      data.sort((a: Conversation, b: Conversation) => {
+        if (a.isFavorite && !b.isFavorite) return -1;
+        if (!a.isFavorite && b.isFavorite) return 1;
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+      });
       setConversations(data);
       setError(null);
     } catch (err) {
@@ -187,6 +194,39 @@ export function useConversations() {
     [currentConversation]
   );
 
+  // Toggle favorite status
+  const toggleFavorite = useCallback(
+    async (id: string): Promise<boolean> => {
+      try {
+        const response = await fetch(`/api/conversations/${id}/favorite`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to toggle favorite');
+        const { isFavorite } = await response.json();
+
+        // Update local state and re-sort
+        setConversations(prev => {
+          const updated = prev.map(c =>
+            c.id === id ? { ...c, isFavorite } : c
+          );
+          updated.sort((a, b) => {
+            if (a.isFavorite && !b.isFavorite) return -1;
+            if (!a.isFavorite && b.isFavorite) return 1;
+            return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+          });
+          return updated;
+        });
+
+        return true;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unknown error');
+        return false;
+      }
+    },
+    []
+  );
+
   // Clear current conversation (start fresh without saving)
   const clearCurrentConversation = useCallback(() => {
     setCurrentConversation(null);
@@ -203,6 +243,7 @@ export function useConversations() {
     saveMessages,
     updateTitle,
     deleteConversation,
+    toggleFavorite,
     clearCurrentConversation,
   };
 }

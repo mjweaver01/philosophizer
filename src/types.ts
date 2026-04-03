@@ -29,5 +29,6 @@ export interface Conversation {
   createdAt: string;
   updatedAt: string;
   modelName?: string | null;
+  isFavorite?: boolean;
   messages?: ConversationMessage[];
 }

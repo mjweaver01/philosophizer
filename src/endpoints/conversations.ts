@@ -5,6 +5,7 @@ import {
   updateConversation,
   deleteConversation,
   saveMessages,
+  toggleFavorite,
   type ConversationMessage,
 } from '../utils/conversations';
 import { requireAuth } from '../middleware/auth';
@@ -240,6 +241,64 @@ export const conversation = {
       });
     } catch (error) {
       console.error('Delete conversation error:', error);
+      return new Response(
+        JSON.stringify({
+          error: 'Internal server error',
+          message: error instanceof Error ? error.message : String(error),
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
+  },
+};
+
+/**
+ * Conversation favorite endpoint
+ *
+ * POST /api/conversations/:id/favorite - Toggle favorite status
+ */
+export const conversationFavorite = {
+  POST: async (req: Request) => {
+    try {
+      const authResult = await requireAuth(req);
+      if (authResult instanceof Response) return authResult;
+      const { user } = authResult;
+
+      const url = new URL(req.url);
+      const parts = url.pathname.split('/');
+      const id = parts[parts.length - 2];
+
+      if (!id) {
+        return new Response(
+          JSON.stringify({ error: 'Missing conversation ID' }),
+          {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      const isFavorite = await toggleFavorite(id, user.id);
+
+      if (isFavorite === null) {
+        return new Response(
+          JSON.stringify({ error: 'Conversation not found' }),
+          {
+            status: 404,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      return new Response(JSON.stringify({ isFavorite }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    } catch (error) {
+      console.error('Toggle favorite error:', error);
       return new Response(
         JSON.stringify({
           error: 'Internal server error',

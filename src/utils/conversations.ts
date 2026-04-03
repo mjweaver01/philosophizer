@@ -17,6 +17,7 @@ export interface Conversation {
   title: string;
   createdAt: string;
   updatedAt: string;
+  isFavorite: boolean;
   messages: ConversationMessage[];
 }
 
@@ -85,6 +86,7 @@ export async function createConversation(
     title: conversationTitle,
     createdAt: now,
     updatedAt: now,
+    isFavorite: false,
     messages: [],
   };
 }
@@ -99,7 +101,7 @@ export async function getConversation(
   const pool = getPool();
 
   const conversationResult = await pool.query(
-    `SELECT id, user_id, title, created_at, updated_at
+    `SELECT id, user_id, title, is_favorite, created_at, updated_at
      FROM conversations
      WHERE id = $1`,
     [id]
@@ -139,6 +141,7 @@ export async function getConversation(
     title: row.title,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    isFavorite: row.is_favorite || false,
     messages,
   };
 }
@@ -152,10 +155,10 @@ export async function listConversations(
   const pool = getPool();
 
   const result = await pool.query(
-    `SELECT id, user_id, title, created_at, updated_at
+    `SELECT id, user_id, title, is_favorite, created_at, updated_at
      FROM conversations
      WHERE user_id = $1
-     ORDER BY updated_at DESC`,
+     ORDER BY is_favorite DESC, updated_at DESC`,
     [userId]
   );
 
@@ -165,6 +168,7 @@ export async function listConversations(
     title: row.title,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    isFavorite: row.is_favorite || false,
   }));
 }
 
@@ -384,6 +388,27 @@ export async function saveMessages(
   } finally {
     client.release();
   }
+}
+
+/**
+ * Toggle favorite status for a conversation
+ */
+export async function toggleFavorite(
+  id: string,
+  userId: string
+): Promise<boolean | null> {
+  const pool = getPool();
+
+  const result = await pool.query(
+    `UPDATE conversations
+     SET is_favorite = NOT is_favorite
+     WHERE id = $1 AND user_id = $2
+     RETURNING is_favorite`,
+    [id, userId]
+  );
+
+  if (result.rows.length === 0) return null;
+  return result.rows[0].is_favorite;
 }
 
 /**

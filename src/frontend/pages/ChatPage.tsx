@@ -103,6 +103,7 @@ export function ChatPage() {
     saveMessages,
     updateTitle,
     deleteConversation,
+    toggleFavorite,
     clearCurrentConversation,
   } = useConversations();
 
@@ -464,6 +465,7 @@ export function ChatPage() {
         onSelectConversation={handleSelectConversation}
         onDeleteConversation={handleDeleteConversation}
         onRenameConversation={updateTitle}
+        onToggleFavorite={toggleFavorite}
       />
 
       {/* Main Chat Area */}

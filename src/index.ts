@@ -1,7 +1,7 @@
 import indexPageHtml from './frontend/index.html';
 import { agent } from './endpoints/agent';
 import { rag } from './endpoints/rag';
-import { conversations, conversation } from './endpoints/conversations';
+import { conversations, conversation, conversationFavorite } from './endpoints/conversations';
 import {
   philosophersEndpoint,
   philosopherDetailEndpoint,
@@ -75,6 +75,7 @@ const server = Bun.serve({
     '/api/texts/:sourceId': textsEndpoint,
     '/api/conversations': conversations,
     '/api/conversations/:id': conversation,
+    '/api/conversations/:id/favorite': conversationFavorite,
   },
   async fetch(req: Request) {
     const url = new URL(req.url);
