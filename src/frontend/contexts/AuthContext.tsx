@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { Navigate, Outlet, useNavigate } from 'react-router';
 
 interface User {
   id: string;
@@ -15,6 +16,7 @@ interface AuthContextType {
   signup: (email: string, password: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
+  isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -116,6 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signup,
         logout,
         isAuthenticated: !!user && !!token,
+        isAdmin: !!user?.isAdmin,
       }}
     >
       {children}
@@ -129,4 +132,76 @@ export function useAuth() {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+}
+
+/**
+ * Hook to require admin privileges.
+ * Redirects to login if not authenticated, or to home if not an admin.
+ */
+export function useRequireAdmin() {
+  const { isAdmin, loading, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading) {
+      if (!isAuthenticated) {
+        navigate('/login', { replace: true });
+      } else if (!isAdmin) {
+        alert('Access denied: Admin privileges required');
+        navigate('/', { replace: true });
+      }
+    }
+  }, [isAdmin, loading, isAuthenticated, navigate]);
+
+  return { isAdmin, loading, isAuthenticated };
+}
+
+/**
+ * Hook to redirect authenticated users away (e.g., from login/signup pages).
+ */
+export function useRedirectIfAuthenticated(to = '/') {
+  const { isAuthenticated, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && isAuthenticated) {
+      navigate(to, { replace: true });
+    }
+  }, [isAuthenticated, loading, navigate, to]);
+
+  return { isAuthenticated, loading };
+}
+
+/**
+ * Component for admin-only routes.
+ */
+export function AdminRoute() {
+  const { isAdmin, loading, isAuthenticated } = useAuth();
+
+  if (loading) return null;
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!isAdmin) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <Outlet />;
+}
+
+/**
+ * Component for routes that should only be accessible to guests.
+ */
+export function GuestRoute() {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) return null;
+
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <Outlet />;
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth, useRedirectIfAuthenticated } from '../contexts/AuthContext';
 import { Logo } from '../components/Logo';
 
 export default function SignupPage() {
@@ -11,6 +11,9 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const { signup } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useRedirectIfAuthenticated();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

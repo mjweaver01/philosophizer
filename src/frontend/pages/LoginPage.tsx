@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth, useRedirectIfAuthenticated } from '../contexts/AuthContext';
 import { Logo } from '../components/Logo';
 
 export default function LoginPage() {
@@ -10,6 +10,9 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useRedirectIfAuthenticated();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

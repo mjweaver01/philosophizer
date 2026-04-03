@@ -6,7 +6,7 @@ import { SearchPage } from './pages/SearchPage';
 import { AdminPage } from './pages/AdminPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, AdminRoute, GuestRoute } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import './styles.css';
 
@@ -48,8 +48,10 @@ function App() {
       <AuthProvider>
         <Routes>
           {/* Public routes */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
+          <Route element={<GuestRoute />}>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+          </Route>
 
           {/* Protected routes */}
           <Route element={<ProtectedRoute />}>
@@ -57,7 +59,10 @@ function App() {
             <Route path="/c/:id" element={<ChatPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/search" element={<SearchPage />} />
-            <Route path="/admin" element={<AdminPage />} />
+            {/* Admin routes */}
+            <Route element={<AdminRoute />}>
+              <Route path="/admin" element={<AdminPage />} />
+            </Route>
           </Route>
 
           {/* Catch-all redirect */}

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth, useRequireAdmin } from '../contexts/AuthContext';
 import { AdminHeader } from '../components/admin/AdminHeader';
 import { SystemPrompts } from '../components/admin/SystemPrompts';
 import { DatabaseStats } from '../components/admin/DatabaseStats';
@@ -51,7 +50,10 @@ interface DockerImage {
 
 export function AdminPage() {
   const { user } = useAuth();
-  const navigate = useNavigate();
+
+  // Check if user is admin (after auth is loaded)
+  useRequireAdmin();
+
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [backups, setBackups] = useState<BackupFile[]>([]);
   const [dockerImages, setDockerImages] = useState<DockerImage[]>([]);
@@ -63,31 +65,6 @@ export function AdminPage() {
   const [dockerImageName, setDockerImageName] = useState('');
   const [dockerRepo, setDockerRepo] = useState('');
   const [activeTab, setActiveTab] = useState('database-statistics');
-
-  // Check if user is admin
-  useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-    if (!token) {
-      navigate('/login', { replace: true });
-      return;
-    }
-
-    fetch('/auth/me', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (!data.user?.isAdmin) {
-          alert('Access denied: Admin privileges required');
-          navigate('/', { replace: true });
-        }
-      })
-      .catch(() => {
-        navigate('/login', { replace: true });
-      });
-  }, [navigate]);
 
   // Load initial data
   useEffect(() => {
