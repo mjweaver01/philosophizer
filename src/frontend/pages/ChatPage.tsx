@@ -44,6 +44,7 @@ export function ChatPage() {
   });
   const settingsButtonRef = useRef<HTMLButtonElement>(null);
   const isLoadingMessagesRef = useRef(false);
+  const [submitCount, setSubmitCount] = useState(0);
 
   // Save model selection to localStorage when it changes
   useEffect(() => {
@@ -291,6 +292,7 @@ export function ChatPage() {
       role: 'user',
       parts: [{ type: 'text', text: messageContent }],
     } as any);
+    setSubmitCount(c => c + 1);
   };
 
   const handleStarterQuestion = async (question: string) => {
@@ -305,6 +307,7 @@ export function ChatPage() {
       role: 'user',
       parts: [{ type: 'text', text: question }],
     } as any);
+    setSubmitCount(c => c + 1);
   };
 
   const handleNewConversation = async () => {
@@ -488,6 +491,7 @@ export function ChatPage() {
           <Conversation
             className="h-full"
             showScrollButton={messages.length > 0}
+            scrollToBottomTrigger={submitCount}
           >
             <ConversationContent>
               <div className="flex flex-col max-w-3xl mx-auto px-4">

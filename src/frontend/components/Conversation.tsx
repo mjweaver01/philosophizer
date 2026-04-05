@@ -1,5 +1,5 @@
 import type { ComponentProps, ReactNode } from 'react';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { StickToBottom, useStickToBottomContext } from 'use-stick-to-bottom';
 
 function ScrollButton() {
@@ -37,13 +37,27 @@ function ScrollButton() {
   );
 }
 
+function ScrollToBottomTrigger({ trigger }: { trigger?: number }) {
+  const { scrollToBottom } = useStickToBottomContext();
+
+  useEffect(() => {
+    if (trigger) {
+      scrollToBottom();
+    }
+  }, [trigger]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return null;
+}
+
 export function Conversation({
   className,
   showScrollButton = true,
+  scrollToBottomTrigger,
   children,
   ...props
 }: Omit<ComponentProps<typeof StickToBottom>, 'children'> & {
   showScrollButton?: boolean;
+  scrollToBottomTrigger?: number;
   children?: ReactNode;
 }) {
   return (
@@ -55,6 +69,7 @@ export function Conversation({
       {...props}
     >
       {children}
+      <ScrollToBottomTrigger trigger={scrollToBottomTrigger} />
       {showScrollButton && <ScrollButton />}
     </StickToBottom>
   );
