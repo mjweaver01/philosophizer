@@ -1,27 +1,28 @@
 import type { UIMessage, UIMessagePart, UIDataTypes, UITools } from 'ai';
 
 export interface AgentRequest {
-  messages: ConversationMessage[];
+  messages: UIMessage[];
   philosopherId?: string;
 }
 
-/**
- * Conversation message type with database fields
- * Extends AI SDK's UIMessage with timestamp and content fields for DB support
- */
-export interface ConversationMessage extends UIMessage {
-  timestamp: string;
-  content: string;
-}
-
-/**
- * Message part type with database fields
- */
 export type MessagePart = UIMessagePart<UIDataTypes, UITools>;
 
-/**
- * Conversation type with database fields
- */
+export interface DBConversationMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
+  parts?: MessagePart[];
+}
+
+export interface ConversationSearchResult {
+  id: string;
+  title: string;
+  content: string;
+  relevanceScore: number;
+  updatedAt: string;
+}
+
 export interface Conversation {
   id: string;
   userId: string;
@@ -30,5 +31,5 @@ export interface Conversation {
   updatedAt: string;
   modelName?: string | null;
   isFavorite?: boolean;
-  messages?: ConversationMessage[];
+  messages?: DBConversationMessage[];
 }

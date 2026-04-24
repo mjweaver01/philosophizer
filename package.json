@@ -12,6 +12,7 @@
     "stop:docker": "docker compose down",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "typecheck": "bunx tsc --noEmit",
     "postgres": "docker compose up -d postgres",
     "postgres:schema": "docker compose exec -T postgres psql -U postgres -d philosophizer < src/db/schema.sql",
     "postgres:setup": "bun run postgres && sleep 3 && bun run postgres:schema",

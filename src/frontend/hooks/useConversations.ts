@@ -1,21 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
+import type { DBConversationMessage, Conversation } from '../../types';
 
-export interface ConversationMessage {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: string;
-  parts?: unknown[];
-}
-
-export interface Conversation {
-  id: string;
-  title: string;
-  createdAt: string;
-  updatedAt: string;
-  isFavorite?: boolean;
-  messages?: ConversationMessage[];
-}
+export type { DBConversationMessage as ConversationMessage, Conversation };
 
 // Helper to get auth headers
 function getAuthHeaders(): HeadersInit {
@@ -113,7 +99,7 @@ export function useConversations() {
 
   // Save messages to current conversation
   const saveMessages = useCallback(
-    async (messages: ConversationMessage[]): Promise<boolean> => {
+    async (messages: DBConversationMessage[]): Promise<boolean> => {
       if (!currentConversation) return false;
 
       try {

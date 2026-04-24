@@ -6,8 +6,8 @@ import {
   deleteConversation,
   saveMessages,
   toggleFavorite,
-  type ConversationMessage,
 } from '../utils/conversations';
+import type { DBConversationMessage } from '../types';
 import { requireAuth } from '../middleware/auth';
 
 /**
@@ -151,7 +151,7 @@ export const conversation = {
 
       const body = (await req.json()) as {
         title?: string;
-        messages?: ConversationMessage[];
+        messages?: DBConversationMessage[];
       };
 
       // If messages are provided, save them

@@ -1,9 +1,9 @@
-import { ToolLoopAgent, stepCountIs, type UIMessage } from 'ai';
+import { ToolLoopAgent, stepCountIs, isTextUIPart, type UIMessage } from 'ai';
 import { LLM_MODEL } from '../constants/providers';
 import { getSystemPrompt } from '../constants/prompts';
 import { createTools } from '../tools';
 import { getModelProviderById } from './providers';
-import { searchConversations, type ConversationMessage } from './conversations';
+import { searchConversations } from './conversations';
 
 function extractTextContent(message: UIMessage): string {
   if (!message.parts || !Array.isArray(message.parts)) {
@@ -11,8 +11,8 @@ function extractTextContent(message: UIMessage): string {
   }
 
   return message.parts
-    .filter((part: any) => part.type === 'text')
-    .map((part: any) => part.text || '')
+    .filter(isTextUIPart)
+    .map(part => part.text)
     .join(' ');
 }
 

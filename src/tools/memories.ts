@@ -71,7 +71,7 @@ Returns summaries of relevant past conversations.`,
               relevance: `${(result.relevanceScore * 100).toFixed(0)}%`,
               date: new Date(result.updatedAt).toLocaleDateString(),
               preview,
-              messageCount: fullConversation?.messages.length || 0,
+              messageCount: fullConversation?.messages?.length ?? 0,
             };
           })
         );
@@ -131,7 +131,7 @@ Use this when you need more context from a conversation that was found with reca
         }
 
         // Format the full conversation
-        const formattedMessages = fullConversation.messages.map(m => ({
+        const formattedMessages = (fullConversation.messages ?? []).map(m => ({
           role: m.role,
           content: m.content,
         }));
@@ -140,7 +140,7 @@ Use this when you need more context from a conversation that was found with reca
           found: true,
           title: fullConversation.title,
           date: new Date(fullConversation.updatedAt).toLocaleDateString(),
-          messageCount: fullConversation.messages.length,
+          messageCount: fullConversation.messages?.length ?? 0,
           messages: formattedMessages,
         };
       } catch (error) {

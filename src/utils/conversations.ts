@@ -2,32 +2,13 @@ import { embed } from 'ai';
 import { v4 as uuid } from 'uuid';
 import { EMBEDDING_MODEL } from './providers';
 import { getPool } from '../db/connection';
+import type {
+  DBConversationMessage,
+  Conversation,
+  ConversationSearchResult,
+} from '../types';
 
-export interface ConversationMessage {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: string;
-  parts?: unknown[];
-}
-
-export interface Conversation {
-  id: string;
-  userId: string;
-  title: string;
-  createdAt: string;
-  updatedAt: string;
-  isFavorite: boolean;
-  messages: ConversationMessage[];
-}
-
-export interface ConversationSearchResult {
-  id: string;
-  title: string;
-  content: string;
-  relevanceScore: number;
-  updatedAt: string;
-}
+export type { DBConversationMessage, Conversation, ConversationSearchResult };
 
 /**
  * Generate embedding for text using the configured embedding model
@@ -43,7 +24,7 @@ async function generateEmbedding(text: string): Promise<number[]> {
 /**
  * Create a summary of conversation content for embedding
  */
-function getConversationContent(messages: ConversationMessage[]): string {
+function getConversationContent(messages: DBConversationMessage[]): string {
   if (messages.length === 0) return '';
 
   // Create a summary of the conversation for embedding
@@ -127,7 +108,7 @@ export async function getConversation(
     [id]
   );
 
-  const messages: ConversationMessage[] = messagesResult.rows.map(msgRow => ({
+  const messages: DBConversationMessage[] = messagesResult.rows.map(msgRow => ({
     id: msgRow.id,
     role: msgRow.role,
     content: msgRow.content,
@@ -244,7 +225,7 @@ export async function updateConversation(
   const newTitle = updates.title || existing.title;
 
   // Re-generate embedding with new title + content
-  const content = getConversationContent(existing.messages);
+  const content = getConversationContent(existing.messages ?? []);
   const textForEmbedding = `${newTitle}\n\n${content}`;
   const embedding = await generateEmbedding(textForEmbedding);
 
@@ -271,8 +252,8 @@ export async function updateConversation(
 export async function addMessage(
   conversationId: string,
   userId: string,
-  message: Omit<ConversationMessage, 'id' | 'timestamp'>
-): Promise<ConversationMessage | null> {
+  message: Omit<DBConversationMessage, 'id' | 'timestamp'>
+): Promise<DBConversationMessage | null> {
   const conversation = await getConversation(conversationId, userId);
   if (!conversation) return null;
 
@@ -295,7 +276,8 @@ export async function addMessage(
   );
 
   // Update conversation embedding and timestamp
-  conversation.messages.push({
+  const updatedMessages = conversation.messages ?? [];
+  updatedMessages.push({
     id: messageId,
     role: message.role,
     content: message.content,
@@ -303,7 +285,7 @@ export async function addMessage(
     parts: message.parts,
   });
 
-  const content = getConversationContent(conversation.messages);
+  const content = getConversationContent(updatedMessages);
   const textForEmbedding = `${conversation.title}\n\n${content}`;
   const embedding = await generateEmbedding(textForEmbedding);
 
@@ -334,7 +316,7 @@ export async function addMessage(
 export async function saveMessages(
   conversationId: string,
   userId: string,
-  messages: ConversationMessage[]
+  messages: DBConversationMessage[]
 ): Promise<boolean> {
   const existing = await getConversation(conversationId, userId);
   if (!existing) return false;

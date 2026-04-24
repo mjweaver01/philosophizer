@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { useChat } from '@ai-sdk/react';
+import { isTextUIPart, type UIMessage } from 'ai';
+import type { DBConversationMessage, MessagePart } from '../../types';
 import { Messages } from '../components/messages/Messages';
 import { useChatTransport } from '../hooks/useChatTransport';
 import {
@@ -25,6 +27,14 @@ function getRandomQuestions(questions: string[], limit: number): string[] {
 // URL utilities
 function getConversationIdFromUrl(id?: string): string | null {
   return id ?? null;
+}
+
+function dbMessageToUIMessage(msg: DBConversationMessage): UIMessage {
+  return {
+    id: msg.id,
+    role: msg.role,
+    parts: msg.parts ?? [{ type: 'text' as const, text: msg.content }],
+  };
 }
 
 export function ChatPage() {
@@ -124,11 +134,11 @@ export function ChatPage() {
         ...prev,
         {
           id: `error-${Date.now()}`,
-          role: 'assistant',
+          role: 'assistant' as const,
           parts: [
-            { type: 'text', text: `Sorry, something went wrong: ${errorText}` },
+            { type: 'text' as const, text: `Sorry, something went wrong: ${errorText}` },
           ],
-        } as any,
+        },
       ]);
     },
   });
@@ -148,12 +158,7 @@ export function ChatPage() {
           isLoadingMessagesRef.current = true;
           const conversation = await loadConversation(urlConversationId);
           if (conversation?.messages) {
-            const chatMessages = conversation.messages.map(msg => ({
-              id: msg.id,
-              role: msg.role,
-              parts: msg.parts || [{ type: 'text', text: msg.content }],
-            }));
-            setMessages(chatMessages as any);
+            setMessages(conversation.messages.map(dbMessageToUIMessage));
           }
           // Reset the flag after a short delay to allow the effect to run
           setTimeout(() => {
@@ -174,12 +179,7 @@ export function ChatPage() {
         isLoadingMessagesRef.current = true;
         const conversation = await loadConversation(urlConversationId);
         if (conversation?.messages) {
-          const chatMessages = conversation.messages.map(msg => ({
-            id: msg.id,
-            role: msg.role,
-            parts: msg.parts || [{ type: 'text', text: msg.content }],
-          }));
-          setMessages(chatMessages as any);
+          setMessages(conversation.messages.map(dbMessageToUIMessage));
         } else {
           setMessages([]);
         }
@@ -220,17 +220,13 @@ export function ChatPage() {
   }, [currentConversation?.id, initialLoadDone, navigate, id]);
 
   // Convert useChat messages to conversation format for saving
-  const convertMessagesForSaving = useCallback(() => {
+  const convertMessagesForSaving = useCallback((): DBConversationMessage[] => {
     return messages.map(msg => ({
       id: crypto.randomUUID(), // AI SDK uses non-UUID IDs, generate UUID for database
       role: msg.role as 'user' | 'assistant',
-      content:
-        msg.parts
-          ?.filter((p: any) => p.type === 'text')
-          .map((p: any) => p.text)
-          .join('') || '',
+      content: msg.parts?.filter(isTextUIPart).map(p => p.text).join('') ?? '',
       timestamp: new Date().toISOString(),
-      parts: msg.parts,
+      parts: msg.parts as MessagePart[],
     }));
   }, [messages]);
 
@@ -263,10 +259,7 @@ export function ChatPage() {
       const firstUserMessage = messages.find(m => m.role === 'user');
       if (firstUserMessage) {
         const content =
-          firstUserMessage.parts
-            ?.filter((p: any) => p.type === 'text')
-            .map((p: any) => p.text)
-            .join('') || '';
+          firstUserMessage.parts?.filter(isTextUIPart).map(p => p.text).join('') ?? '';
         if (content) {
           const title =
             content.length > 50 ? content.slice(0, 50) + '...' : content;
@@ -290,8 +283,8 @@ export function ChatPage() {
 
     sendMessage({
       role: 'user',
-      parts: [{ type: 'text', text: messageContent }],
-    } as any);
+      parts: [{ type: 'text' as const, text: messageContent }],
+    });
     setSubmitCount(c => c + 1);
   };
 
@@ -305,8 +298,8 @@ export function ChatPage() {
 
     sendMessage({
       role: 'user',
-      parts: [{ type: 'text', text: question }],
-    } as any);
+      parts: [{ type: 'text' as const, text: question }],
+    });
     setSubmitCount(c => c + 1);
   };
 
@@ -319,13 +312,7 @@ export function ChatPage() {
     isLoadingMessagesRef.current = true;
     const conversation = await loadConversation(id);
     if (conversation?.messages) {
-      // Convert saved messages back to useChat format
-      const chatMessages = conversation.messages.map(msg => ({
-        id: msg.id,
-        role: msg.role,
-        parts: msg.parts || [{ type: 'text', text: msg.content }],
-      }));
-      setMessages(chatMessages as any);
+      setMessages(conversation.messages.map(dbMessageToUIMessage));
     } else {
       setMessages([]);
     }
@@ -367,10 +354,7 @@ export function ChatPage() {
 
     // Extract message content
     const messageContent =
-      lastUserMessage.parts
-        ?.filter((p: any) => p.type === 'text')
-        .map((p: any) => p.text)
-        .join('') || '';
+      lastUserMessage.parts?.filter(isTextUIPart).map(p => p.text).join('') ?? '';
 
     if (!messageContent) {
       console.warn('No message content found');
@@ -380,8 +364,8 @@ export function ChatPage() {
     // Resend the last user message (keeping all previous messages)
     sendMessage({
       role: 'user',
-      parts: [{ type: 'text', text: messageContent }],
-    } as any);
+      parts: [{ type: 'text' as const, text: messageContent }],
+    });
   }, [messages, isProcessing, sendMessage]);
 
   const MenuButton = () => (
