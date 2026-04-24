@@ -166,6 +166,14 @@ async function initializeModelProviders() {
       defaultSystemPrompt,
       costPerToken: { prompt: 0, completion: 0 },
     },
+    {
+      id: 'qwen/qwen3.6-35b-a3b',
+      name: 'Qwen3.6 35B A3B (LMStudio)',
+      available: true,
+      model: lmstudio('qwen/qwen3.6-35b-a3b'),
+      defaultSystemPrompt,
+      costPerToken: { prompt: 0, completion: 0 },
+    },
   ];
 }
 
