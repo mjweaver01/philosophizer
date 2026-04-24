@@ -1,3 +1,4 @@
+import { useLocation } from 'react-router';
 import { EmptyState } from './EmptyState';
 import { MessageAvatar } from './MessageAvatar';
 import { UserMessage } from './UserMessage';
@@ -103,8 +104,9 @@ export function Messages({
   onRegenerateLastMessage,
   philosopherNames = [],
 }: MessagesProps) {
+  const location = useLocation();
+  const isInConversation = location.pathname.startsWith('/c/');
   const isStreaming = status === 'submitted' || status === 'streaming';
-
   // Check if there's a user message to regenerate
   const hasUserMessage = messages.some(m => m.role === 'user');
 
@@ -112,6 +114,7 @@ export function Messages({
     <>
       {messages.length === 0 && (
         <EmptyState
+          isInConversation={isInConversation}
           starterQuestions={starterQuestions}
           onStarterQuestion={onStarterQuestion}
           philosopherNames={philosopherNames}
