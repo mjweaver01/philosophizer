@@ -16,6 +16,10 @@ export const GENERAL_QUESTIONS = [
   'What is the good life?',
   'What is freedom?',
   'How should I face death?',
+  'What is evil?',
+  'What does it mean to be human?',
+  'How should I live with uncertainty?',
+  'What do I owe to other people?',
 ];
 
 // Questions by philosophical tradition
@@ -65,10 +69,15 @@ export const QUESTIONS_BY_TRADITION: Record<string, string[]> = {
     'What is divine providence?',
     'How can I grow in holiness?',
     'What is the purpose of prayer?',
+    "How should I pray the Lord's Prayer?",
     'Does God exist? What are the arguments?',
     'Why do bad things happen to good people?',
+    'How can God know all things while humans remain free?',
     'What is the relationship between faith and works?',
     'How can I understand the incarnation?',
+    'Why does Jesus call himself the Son of Man?',
+    'What does Easter change about how I live?',
+    'What does Good Friday teach about suffering and love?',
     'What is the beatific vision?',
   ],
   'Christian Mysticism': [
@@ -86,6 +95,7 @@ export const QUESTIONS_BY_TRADITION: Record<string, string[]> = {
     'How can God be born in my soul according to Eckhart?',
     'What did Jakob Böhme teach about light and darkness in God?',
     'What is the ground of being?',
+    'How should I practice lectio divina?',
     'How do I empty myself to be filled with God?',
   ],
   'Protestant Reformation': [
@@ -131,10 +141,13 @@ export const QUESTIONS_BY_TRADITION: Record<string, string[]> = {
     'How do I respond to atheism?',
     'What makes Christianity unique?',
     'How can I answer objections to faith?',
+    'What prophecies did Jesus fulfill?',
+    'How do Jewish and Christian readings of messianic prophecy differ?',
     'What is the basis for morality?',
     'How does Christianity address suffering?',
     'What is the moral argument for God?',
     'How can I explain the problem of evil?',
+    'How can I think about evil without losing hope?',
     'What is mere Christianity?',
     'How do I answer the trilemma about Jesus?',
     'What is the paradox of Christianity?',
