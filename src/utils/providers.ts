@@ -28,6 +28,11 @@ export interface ModelProvider {
   };
 }
 
+export interface ModelsResponse {
+  defaultModel: string;
+  models: ModelProvider[];
+}
+
 const checkApiKey = (key: string | undefined, provider: string): boolean => {
   const exists = !!key;
   if (!exists) {
@@ -106,8 +111,8 @@ async function initializeModelProviders() {
       available: checkApiKey(process.env.OPENAI_API_KEY, 'OPENAI'),
       model: openai('gpt-4.1-mini'),
       defaultSystemPrompt,
-      // per 1M tokens
-      costPerToken: { prompt: 0.15, completion: 0.6 },
+      // per 1M tokens - verified Apr 2026
+      costPerToken: { prompt: 0.4, completion: 1.6 },
     },
     {
       id: 'gpt-4.1',
@@ -115,65 +120,97 @@ async function initializeModelProviders() {
       available: checkApiKey(process.env.OPENAI_API_KEY, 'OPENAI'),
       model: openai('gpt-4.1'),
       defaultSystemPrompt,
-      costPerToken: { prompt: 2.5, completion: 10 },
+      // per 1M tokens - verified Apr 2026
+      costPerToken: { prompt: 2, completion: 8 },
     },
+    // {
+    //   id: 'gpt-5-nano',
+    //   name: 'GPT-5 Nano - ChatGPT (OpenAI)',
+    //   available: checkApiKey(process.env.OPENAI_API_KEY, 'OPENAI'),
+    //   model: openai('gpt-5-nano'),
+    //   defaultSystemPrompt,
+    //   costPerToken: { prompt: 0.05, completion: 0.4 },
+    // },
     {
       id: 'gpt-5-mini',
-      name: 'GPT-5 Mini (OpenAI)',
+      name: 'GPT-5 Mini - ChatGPT (OpenAI)',
       available: checkApiKey(process.env.OPENAI_API_KEY, 'OPENAI'),
       model: openai('gpt-5-mini'),
       defaultSystemPrompt,
-      costPerToken: { prompt: 0.3, completion: 1.2 },
+      // per 1M tokens - verified Apr 2026
+      costPerToken: { prompt: 0.25, completion: 2 },
     },
     {
-      id: 'gpt-5',
-      name: 'GPT-5 (OpenAI)',
+      id: 'gpt-5-chat',
+      name: 'GPT-5 Chat - ChatGPT (OpenAI)',
       available: checkApiKey(process.env.OPENAI_API_KEY, 'OPENAI'),
-      model: openai('gpt-5'),
+      model: openai('gpt-5-chat-latest'),
       defaultSystemPrompt,
-      costPerToken: { prompt: 5, completion: 15 },
+      // per 1M tokens - verified Apr 2026
+      costPerToken: { prompt: 1.25, completion: 10 },
     },
     {
-      id: 'gpt-5.2',
-      name: 'GPT-5.2 (OpenAI)',
+      id: 'gpt-5.5',
+      name: 'GPT-5.5 (OpenAI)',
       available: checkApiKey(process.env.OPENAI_API_KEY, 'OPENAI'),
-      model: openai('gpt-5.2'),
+      model: openai('gpt-5.5'),
       defaultSystemPrompt,
-      costPerToken: { prompt: 10, completion: 30 },
+      // per 1M tokens - verified Apr 2026
+      costPerToken: { prompt: 5, completion: 30 },
     },
     {
       id: 'claude-4.6-sonnet',
       name: 'Claude 4.6 Sonnet (Anthropic)',
       available: checkApiKey(process.env.ANTHROPIC_API_KEY, 'ANTHROPIC'),
       model: createAnthropicModelWithThinking('claude-sonnet-4-6', 10000),
-      // per 1M tokens - verified Jan 2025
+      // per 1M tokens - verified Apr 2026
       costPerToken: { prompt: 3, completion: 15 },
       defaultSystemPrompt,
     },
     {
-      id: 'qwen/qwen3-1.7b',
-      name: 'Qwen3 1.7B (LMStudio)',
-      available: true,
-      model: lmstudio('qwen/qwen3-1.7b'),
+      id: 'claude-4.7-opus',
+      name: 'Claude 4.7 Opus (Anthropic)',
+      available: checkApiKey(process.env.ANTHROPIC_API_KEY, 'ANTHROPIC'),
+      model: createAnthropicModelWithThinking('claude-opus-4-7', 10000),
+      // per 1M tokens - verified Apr 2026
+      costPerToken: { prompt: 5, completion: 25 },
       defaultSystemPrompt,
-      costPerToken: { prompt: 0, completion: 0 },
     },
-    {
-      id: 'qwen/qwen3.5-9b',
-      name: 'Qwen3.5 9B (LMStudio)',
-      available: true,
-      model: lmstudio('qwen/qwen3.5-9b'),
-      defaultSystemPrompt,
-      costPerToken: { prompt: 0, completion: 0 },
-    },
-    {
-      id: 'qwen/qwen3.6-35b-a3b',
-      name: 'Qwen3.6 35B A3B (LMStudio)',
-      available: true,
-      model: lmstudio('qwen/qwen3.6-35b-a3b'),
-      defaultSystemPrompt,
-      costPerToken: { prompt: 0, completion: 0 },
-    },
+    // {
+    //   id: 'gpt-oss-120b',
+    //   name: 'GPT-OSS 120B (Cerebras)',
+    //   available: checkApiKey(process.env.CEREBRAS_API_KEY, 'CEREBRAS'),
+    //   model: cerebras('gpt-oss-120b'),
+    //   defaultSystemPrompt,
+    // },
+    ...(process.env.NODE_ENV === 'development'
+      ? [
+          {
+            id: 'qwen/qwen3-1.7b',
+            name: 'Qwen3 1.7B (LMStudio)',
+            available: true,
+            model: lmstudio('qwen/qwen3-1.7b'),
+            defaultSystemPrompt,
+            costPerToken: { prompt: 0, completion: 0 },
+          },
+          {
+            id: 'qwen/qwen3.5-9b',
+            name: 'Qwen3.5 9B (LMStudio)',
+            available: true,
+            model: lmstudio('qwen/qwen3.5-9b'),
+            defaultSystemPrompt,
+            costPerToken: { prompt: 0, completion: 0 },
+          },
+          {
+            id: 'nvidia/nemotron-3-nano-4b',
+            name: 'Nemotron 3 Nano 4B (LMStudio)',
+            available: true,
+            model: lmstudio('nvidia/nemotron-3-nano-4b'),
+            defaultSystemPrompt,
+            costPerToken: { prompt: 0, completion: 0 },
+          },
+        ]
+      : []),
   ];
 }
 

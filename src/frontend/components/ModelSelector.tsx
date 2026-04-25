@@ -1,20 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Select } from './ui/Select';
-
-interface ModelProvider {
-  id: string;
-  name: string;
-  available: boolean;
-  costPerToken?: {
-    prompt: number;
-    completion: number;
-  };
-}
-
-interface ModelsResponse {
-  defaultModel: string;
-  models: ModelProvider[];
-}
+import type { ModelsResponse } from '../../utils/providers';
 
 interface ModelSelectorProps {
   selectedModel: string | null;
