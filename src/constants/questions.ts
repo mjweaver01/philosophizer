@@ -20,6 +20,8 @@ export const GENERAL_QUESTIONS = [
   'What does it mean to be human?',
   'How should I live with uncertainty?',
   'What do I owe to other people?',
+  'How do I move from belief to practice?',
+  'How can I make peace with the parts of myself I dislike?',
 ];
 
 // Questions by philosophical tradition
@@ -38,6 +40,7 @@ export const QUESTIONS_BY_TRADITION: Record<string, string[]> = {
     'What did Socrates mean by "know thyself"?',
     'How can dialectic lead to truth?',
     'What is the difference between opinion and knowledge?',
+    'How should I seek wise counsel?',
     'What makes a just city?',
     'How should the philosopher-king rule?',
   ],
@@ -78,6 +81,8 @@ export const QUESTIONS_BY_TRADITION: Record<string, string[]> = {
     'Why does Jesus call himself the Son of Man?',
     'What does Easter change about how I live?',
     'What does Good Friday teach about suffering and love?',
+    'What does Maundy Thursday teach about love and service?',
+    'What does obedience look like when it is rooted in love?',
     'What is the beatific vision?',
   ],
   'Christian Mysticism': [
@@ -108,8 +113,10 @@ export const QUESTIONS_BY_TRADITION: Record<string, string[]> = {
     'How do I live by faith?',
     'What is Christian liberty?',
     'How should I read the Bible?',
+    'How should Scripture shape my daily life?',
     'What is the relationship between law and gospel?',
     'What did Martin Luther say about free will?',
+    "What did Luther teach about the Lord's Prayer?",
     'What did John Calvin teach about predestination?',
     'What did the Reformers teach about grace and works?',
     'How should Christians respond to unjust rulers according to Knox?',
@@ -126,6 +133,8 @@ export const QUESTIONS_BY_TRADITION: Record<string, string[]> = {
     'What is Christian discipleship?',
     'How do I overcome sin?',
     'What is revival?',
+    'How can I tell the difference between love and legalism?',
+    'How do I live by the fruit of the Spirit?',
     'How can I know if I am truly saved according to the Puritans?',
     'What did John Wesley mean by a heart "strangely warmed"?',
     "What is the Christian life like according to Bunyan's Pilgrim's Progress?",
