@@ -99,6 +99,7 @@ CREATE TABLE IF NOT EXISTS conversations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
+    is_favorite BOOLEAN NOT NULL DEFAULT FALSE,
     embedding vector(768), -- Embedding of title + conversation content for semantic search
     content_preview TEXT, -- First 500 chars of conversation for quick preview
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,

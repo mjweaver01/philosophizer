@@ -12,6 +12,7 @@
     "stop:docker": "docker compose down",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "typecheck": "bunx tsc --noEmit",
     "postgres": "docker compose up -d postgres",
     "postgres:schema": "docker compose exec -T postgres psql -U postgres -d philosophizer < src/db/schema.sql",
@@ -38,11 +39,14 @@
     "restore:remote": "./scripts/restore-database.sh"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/bun": "latest",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "@types/uuid": "^10.0.0",
-    "prettier": "^3.6.2"
+    "eslint": "^10.2.1",
+    "prettier": "^3.6.2",
+    "typescript-eslint": "^8.59.0"
   },
   "peerDependencies": {
     "typescript": "^5"
