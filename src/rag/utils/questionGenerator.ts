@@ -66,7 +66,7 @@ function parseQuestions(text: string): string[] {
     if (!trimmed) continue;
 
     // Match numbered questions (e.g., "1.", "1)", "Question 1:", etc.)
-    const match = trimmed.match(/^\d+[\.):\-\s]+(.+)/);
+    const match = trimmed.match(/^\d+[.):\-\s]+(.+)/);
     if (match && match[1]) {
       const question = match[1].trim();
       if (question.length > 10) {

@@ -6,7 +6,6 @@
  * allowing direct querying of philosophers without going through the full agent.
  */
 
-import { z } from 'zod';
 import {
   PHILOSOPHERS,
   getPhilosopher,
@@ -22,7 +21,6 @@ import {
   getAdjacentChunks,
   isRAGInitialized,
   queryPassages,
-  type QueryResult,
 } from '../rag/utils/vectorStore';
 
 // ============================================================================
@@ -181,7 +179,7 @@ async function queryRAG(
     }
 
     return { found: true, passages, structured };
-  } catch (error) {
+  } catch {
     console.log('[Philosopher Query] RAG not available, using static content');
     return { found: false, passages: '', structured: [] };
   }

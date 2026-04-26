@@ -83,7 +83,7 @@ export async function createAgent(
   );
 
   const systemPrompt = getSystemPrompt(philosopherIds) + memoryContext;
-  const tools = createTools(userId);
+  const tools = createTools(userId, conversationId);
 
   return new ToolLoopAgent({
     model: modelProvider.model,

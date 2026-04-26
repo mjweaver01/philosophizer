@@ -44,7 +44,7 @@ function ScrollToBottomTrigger({ trigger }: { trigger?: number }) {
     if (trigger) {
       scrollToBottom();
     }
-  }, [trigger]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [trigger]);
 
   return null;
 }

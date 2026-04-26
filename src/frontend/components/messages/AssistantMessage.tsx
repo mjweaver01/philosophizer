@@ -95,7 +95,12 @@ interface MessagePartProps {
   isLastPart?: boolean;
 }
 
-function MessagePart({ part, index, isLastMessage = false, isLastPart = false }: MessagePartProps) {
+function MessagePart({
+  part,
+  index,
+  isLastMessage = false,
+  isLastPart = false,
+}: MessagePartProps) {
   // Skip step-start parts and dynamic-tool parts
   if (part.type === 'step-start' || part.type === 'dynamic-tool') {
     return null;
@@ -103,12 +108,26 @@ function MessagePart({ part, index, isLastMessage = false, isLastPart = false }:
 
   // Handle reasoning/thinking parts (OpenAI o1/o3, Anthropic Claude)
   if ((part.type === 'reasoning' || part.type === 'thinking') && part.text) {
-    return <ReasoningPart text={part.text} index={index} isLastMessage={isLastMessage} isLastPart={isLastPart} />;
+    return (
+      <ReasoningPart
+        text={part.text}
+        index={index}
+        isLastMessage={isLastMessage}
+        isLastPart={isLastPart}
+      />
+    );
   }
 
   // Handle text parts
   if (part.type === 'text' && part.text) {
-    return <TextPart text={part.text} index={index} isLastMessage={isLastMessage} isLastPart={isLastPart} />;
+    return (
+      <TextPart
+        text={part.text}
+        index={index}
+        isLastMessage={isLastMessage}
+        isLastPart={isLastPart}
+      />
+    );
   }
 
   // Handle tool call parts
@@ -118,7 +137,7 @@ function MessagePart({ part, index, isLastMessage = false, isLastPart = false }:
   }
 
   // Unknown part type - render as debug info
-  return <UnknownPart part={part} index={index} />;
+  return <UnknownPart part={part} />;
 }
 
 interface ReasoningPartProps {
@@ -128,7 +147,11 @@ interface ReasoningPartProps {
   isLastPart?: boolean;
 }
 
-function ReasoningPart({ text, isLastMessage = false, isLastPart = false }: ReasoningPartProps) {
+function ReasoningPart({
+  text,
+  isLastMessage = false,
+  isLastPart = false,
+}: ReasoningPartProps) {
   return (
     <ThinkBlock
       content={text}
@@ -145,7 +168,11 @@ interface TextPartProps {
   isLastPart?: boolean;
 }
 
-function TextPart({ text, isLastMessage = false, isLastPart = false }: TextPartProps) {
+function TextPart({
+  text,
+  isLastMessage = false,
+  isLastPart = false,
+}: TextPartProps) {
   const { thinkBlocks, cleanText, hasOpenThink } =
     processTextWithThinkBlocks(text);
 
@@ -165,7 +192,8 @@ function TextPart({ text, isLastMessage = false, isLastPart = false }: TextPartP
       {thinkBlocks.map((thinkContent, thinkIndex) => {
         const isLastBlock = thinkIndex === thinkBlocks.length - 1;
         const isStreaming = isLastBlock && hasOpenThink;
-        const showOpenByDefault = isLastMessage && isLastPart && isLastBlock && !cleanText;
+        const showOpenByDefault =
+          isLastMessage && isLastPart && isLastBlock && !cleanText;
 
         return (
           <ThinkBlock
@@ -207,10 +235,9 @@ function ToolPart({ part, index }: ToolPartProps) {
 
 interface UnknownPartProps {
   part: any;
-  index: number;
 }
 
-function UnknownPart({ part, index }: UnknownPartProps) {
+function UnknownPart({ part }: UnknownPartProps) {
   return (
     <div className="my-2 p-2 bg-warning-bg border border-warning-border rounded text-xs">
       <div className="font-mono text-text">Unknown type: {part.type}</div>

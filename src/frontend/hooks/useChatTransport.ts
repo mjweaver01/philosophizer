@@ -4,6 +4,8 @@ import { DefaultChatTransport } from 'ai';
 interface UseChatTransportOptions {
   selectedModel: string | null;
   selectedPhilosophers: string[];
+  /** Scopes agent tools (e.g. research notes) to this conversation */
+  conversationId: string | null;
 }
 
 /**
@@ -13,14 +15,17 @@ interface UseChatTransportOptions {
 export function useChatTransport({
   selectedModel,
   selectedPhilosophers,
+  conversationId,
 }: UseChatTransportOptions) {
   // Use refs to capture latest values
   const selectedModelRef = useRef(selectedModel);
   const selectedPhilosophersRef = useRef(selectedPhilosophers);
+  const conversationIdRef = useRef(conversationId);
 
   // Keep refs in sync with props
   selectedModelRef.current = selectedModel;
   selectedPhilosophersRef.current = selectedPhilosophers;
+  conversationIdRef.current = conversationId;
 
   // Create transport once - body function reads from refs
   const transport = useMemo(
@@ -46,6 +51,7 @@ export function useChatTransport({
                   ? philosophers[0]
                   : philosophers,
             modelId: selectedModelRef.current,
+            conversationId: conversationIdRef.current ?? undefined,
           };
         },
       }),

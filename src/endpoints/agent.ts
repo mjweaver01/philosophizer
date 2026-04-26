@@ -2,6 +2,7 @@ import { createAgentUIStreamResponse } from 'ai';
 import type { AgentRequest } from '../types';
 import { createAgent } from '../utils/agent';
 import { requireAuth } from '../middleware/auth';
+import { getPhilosopher } from '../constants/philosophers';
 
 interface AgentRequestWithConversation extends AgentRequest {
   conversationId?: string;
@@ -43,6 +44,35 @@ export const agent = {
         );
       }
 
+      let validatedPhilosopherIds: string | string[] | undefined =
+        body.philosopherIds;
+      if (body.philosopherIds !== undefined && body.philosopherIds !== null) {
+        const raw = Array.isArray(body.philosopherIds)
+          ? body.philosopherIds
+          : [body.philosopherIds];
+        const ids = raw.map(id => String(id).trim()).filter(Boolean);
+        if (ids.length === 0) {
+          validatedPhilosopherIds = undefined;
+        } else {
+          const unknown = ids.filter(id => !getPhilosopher(id));
+          if (unknown.length > 0) {
+            return new Response(
+              JSON.stringify({
+                error: 'Unknown philosopher id(s)',
+                unknown,
+              }),
+              {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' },
+              }
+            );
+          }
+          validatedPhilosopherIds = Array.isArray(body.philosopherIds)
+            ? ids
+            : ids[0]!;
+        }
+      }
+
       const formattedMessages = body.messages.map((msg: any) => {
         if (msg.parts) {
           return {
@@ -59,10 +89,10 @@ export const agent = {
         };
       });
 
-      const philosopherInfo = body.philosopherIds
-        ? Array.isArray(body.philosopherIds)
-          ? `focused: ${body.philosopherIds.join(', ')}`
-          : `focused: ${body.philosopherIds}`
+      const philosopherInfo = validatedPhilosopherIds
+        ? Array.isArray(validatedPhilosopherIds)
+          ? `focused: ${validatedPhilosopherIds.join(', ')}`
+          : `focused: ${validatedPhilosopherIds}`
         : '';
 
       console.log(
@@ -73,14 +103,19 @@ export const agent = {
         formattedMessages,
         user.id,
         body.conversationId,
-        body.philosopherIds,
+        validatedPhilosopherIds,
         body.modelId
       );
 
       return createAgentUIStreamResponse({
-        agent: agent as any,
+        agent,
         uiMessages: formattedMessages,
         abortSignal: req.signal,
+        onStepFinish: step => {
+          if (process.env.AGENT_DEBUG_STEPS === '1') {
+            console.log('[Agent] step', step.finishReason, step.usage);
+          }
+        },
       });
     } catch (error) {
       console.error('[Agent] Stream error:', error);

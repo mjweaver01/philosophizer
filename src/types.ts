@@ -2,7 +2,9 @@ import type { UIMessage, UIMessagePart, UIDataTypes, UITools } from 'ai';
 
 export interface AgentRequest {
   messages: UIMessage[];
-  philosopherId?: string;
+  philosopherIds?: string | string[];
+  conversationId?: string;
+  modelId?: string;
 }
 
 export type MessagePart = UIMessagePart<UIDataTypes, UITools>;

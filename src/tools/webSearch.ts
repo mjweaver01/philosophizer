@@ -10,18 +10,31 @@ export const webSearch = tool({
     prompt: z.string().describe('The prompt to search the web for'),
   }),
   execute: async ({ prompt }) => {
-    // Use the webSearchPreview tool to search the web for information
-    const { text } = await generateText({
-      model: openai.responses(WEB_SEARCH_MODEL),
-      prompt: prompt,
-      tools: {
-        // @ts-ignore - OpenAI web search preview types
-        web_search_preview: openai.tools.webSearchPreview({
-          searchContextSize: 'medium',
-        }),
-      },
-    });
+    try {
+      const { text } = await generateText({
+        model: openai.responses(WEB_SEARCH_MODEL),
+        prompt: prompt,
+        tools: {
+          // @ts-ignore - OpenAI web search preview types
+          web_search_preview: openai.tools.webSearchPreview({
+            searchContextSize: 'medium',
+          }),
+        },
+      });
 
-    return text;
+      return text;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      return `Web search failed: ${msg}`;
+    }
+  },
+  toModelOutput: ({ output }) => {
+    const s = typeof output === 'string' ? output : JSON.stringify(output);
+    const max = 8000;
+    const value =
+      s.length > max
+        ? `${s.slice(0, max)}\n\n...[truncated for model context]`
+        : s;
+    return { type: 'text' as const, value };
   },
 });

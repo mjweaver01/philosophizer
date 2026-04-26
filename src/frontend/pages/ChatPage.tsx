@@ -45,7 +45,18 @@ export function ChatPage() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [initialLoadDone, setInitialLoadDone] = useState(false);
   const [selectedPhilosophers, setSelectedPhilosophers] = useState<string[]>(
-    []
+    () => {
+      try {
+        const raw = localStorage.getItem('selected_philosophers');
+        if (!raw) return [];
+        const parsed = JSON.parse(raw) as unknown;
+        return Array.isArray(parsed)
+          ? parsed.filter((id): id is string => typeof id === 'string')
+          : [];
+      } catch {
+        return [];
+      }
+    }
   );
   const [selectedModel, setSelectedModel] = useState<string | null>(() => {
     // Load saved model preference from localStorage
@@ -64,6 +75,21 @@ export function ChatPage() {
       localStorage.removeItem('selected_model');
     }
   }, [selectedModel]);
+
+  useEffect(() => {
+    try {
+      if (selectedPhilosophers.length === 0) {
+        localStorage.removeItem('selected_philosophers');
+      } else {
+        localStorage.setItem(
+          'selected_philosophers',
+          JSON.stringify(selectedPhilosophers)
+        );
+      }
+    } catch {
+      /* ignore quota / private mode */
+    }
+  }, [selectedPhilosophers]);
 
   // Get random starter questions based on selected philosophers
   const randomQuestions = useMemo(() => {
@@ -122,6 +148,7 @@ export function ChatPage() {
   const transport = useChatTransport({
     selectedModel,
     selectedPhilosophers,
+    conversationId: currentConversation?.id ?? null,
   });
 
   // Use the AI SDK's useChat hook
@@ -136,7 +163,10 @@ export function ChatPage() {
           id: `error-${Date.now()}`,
           role: 'assistant' as const,
           parts: [
-            { type: 'text' as const, text: `Sorry, something went wrong: ${errorText}` },
+            {
+              type: 'text' as const,
+              text: `Sorry, something went wrong: ${errorText}`,
+            },
           ],
         },
       ]);
@@ -169,7 +199,7 @@ export function ChatPage() {
       setInitialLoadDone(true);
     };
     loadFromUrl();
-  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [id]);
 
   // Handle browser back/forward
   useEffect(() => {
@@ -224,7 +254,11 @@ export function ChatPage() {
     return messages.map(msg => ({
       id: crypto.randomUUID(), // AI SDK uses non-UUID IDs, generate UUID for database
       role: msg.role as 'user' | 'assistant',
-      content: msg.parts?.filter(isTextUIPart).map(p => p.text).join('') ?? '',
+      content:
+        msg.parts
+          ?.filter(isTextUIPart)
+          .map(p => p.text)
+          .join('') ?? '',
       timestamp: new Date().toISOString(),
       parts: msg.parts as MessagePart[],
     }));
@@ -259,7 +293,10 @@ export function ChatPage() {
       const firstUserMessage = messages.find(m => m.role === 'user');
       if (firstUserMessage) {
         const content =
-          firstUserMessage.parts?.filter(isTextUIPart).map(p => p.text).join('') ?? '';
+          firstUserMessage.parts
+            ?.filter(isTextUIPart)
+            .map(p => p.text)
+            .join('') ?? '';
         if (content) {
           const title =
             content.length > 50 ? content.slice(0, 50) + '...' : content;
@@ -354,7 +391,10 @@ export function ChatPage() {
 
     // Extract message content
     const messageContent =
-      lastUserMessage.parts?.filter(isTextUIPart).map(p => p.text).join('') ?? '';
+      lastUserMessage.parts
+        ?.filter(isTextUIPart)
+        .map(p => p.text)
+        .join('') ?? '';
 
     if (!messageContent) {
       console.warn('No message content found');

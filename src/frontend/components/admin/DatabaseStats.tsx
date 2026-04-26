@@ -36,8 +36,8 @@ function formatSize(size: string): string {
       .replace(/\bbytes?\b/gi, 'Bytes');
   }
 
-  let value = parseFloat(match[1]);
-  let unit = match[2].toLowerCase();
+  const value = parseFloat(match[1]);
+  const unit = match[2].toLowerCase();
 
   let bytes = 0;
   switch (unit) {
