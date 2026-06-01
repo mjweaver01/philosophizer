@@ -8,7 +8,8 @@ interface ConversationSidebarProps {
   currentConversation: Conversation | null;
   isOpen: boolean;
   onClose: () => void;
-  onNewConversation: () => void;
+  onStartNewChat: () => void;
+  isProcessing?: boolean;
   onSelectConversation: (id: string) => void;
   onDeleteConversation: (id: string) => void;
   onRenameConversation: (id: string, title: string) => void;
@@ -20,7 +21,8 @@ export function ConversationSidebar({
   currentConversation,
   isOpen,
   onClose,
-  onNewConversation,
+  onStartNewChat,
+  isProcessing = false,
   onSelectConversation,
   onDeleteConversation,
   onRenameConversation,
@@ -93,14 +95,15 @@ export function ConversationSidebar({
           <div className="flex items-center justify-between px-4 py-3 border-b border-border">
             <h2 className="font-semibold text-text">Conversations</h2>
             <div className="flex items-center gap-2">
-              {/* New Conversation Button */}
+              {/* New Chat Button */}
               <button
                 onClick={() => {
-                  onNewConversation();
+                  onStartNewChat();
                   onClose();
                 }}
-                className="flex items-center justify-center w-9 h-9 bg-surface border border-border hover:bg-surface-secondary text-text-muted hover:text-text rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
-                title="New conversation"
+                disabled={isProcessing}
+                className="flex items-center justify-center w-9 h-9 bg-surface border border-border hover:bg-surface-secondary text-text-muted hover:text-text rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                title="New chat"
               >
                 <svg
                   width="16"

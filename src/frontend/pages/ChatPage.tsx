@@ -340,11 +340,6 @@ export function ChatPage() {
     setSubmitCount(c => c + 1);
   };
 
-  const handleNewConversation = async () => {
-    setMessages([]);
-    await createConversation();
-  };
-
   const handleSelectConversation = async (id: string) => {
     isLoadingMessagesRef.current = true;
     const conversation = await loadConversation(id);
@@ -365,7 +360,7 @@ export function ChatPage() {
     }
   };
 
-  const handleClearConversation = () => {
+  const handleStartNewChat = () => {
     setMessages([]);
     clearCurrentConversation();
   };
@@ -434,7 +429,7 @@ export function ChatPage() {
   const Clear = ({ small = false }: { small?: boolean }) => {
     return (
       <button
-        onClick={handleClearConversation}
+        onClick={handleStartNewChat}
         disabled={isProcessing}
         className={`flex items-center justify-center ${small ? 'w-7 h-7' : 'w-9 h-9'} bg-surface border border-border hover:bg-surface-secondary text-text-muted hover:text-text rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
         title="New Chat"
@@ -488,7 +483,8 @@ export function ChatPage() {
         currentConversation={currentConversation}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        onNewConversation={handleNewConversation}
+        onStartNewChat={handleStartNewChat}
+        isProcessing={isProcessing}
         onSelectConversation={handleSelectConversation}
         onDeleteConversation={handleDeleteConversation}
         onRenameConversation={updateTitle}
