@@ -38,10 +38,18 @@ function ScrollButton() {
 }
 
 function ScrollToBottomTrigger({ trigger }: { trigger?: number }) {
-  const { scrollToBottom } = useStickToBottomContext();
+  const { scrollToBottom, state } = useStickToBottomContext();
 
   useEffect(() => {
     if (trigger) {
+      // use-stick-to-bottom sets `escapedFromLock` when it detects a scroll-up
+      // (real scroll, trackpad/wheel momentum, or text selection mid-stream) and
+      // never clears it on its own — only a remount does. `scrollToBottom()`
+      // re-pins via `isAtBottom` but leaves `escapedFromLock` set, so a single
+      // escape leaks across turns and stops the view from following subsequent
+      // streamed responses until the page is refreshed. Clear it here so each new
+      // turn starts from a clean, locked-to-bottom state.
+      state.escapedFromLock = false;
       scrollToBottom();
     }
   }, [trigger]);
@@ -77,7 +85,22 @@ export function Conversation({
 
 export function ConversationContent({
   className,
+  scrollClassName,
   ...props
 }: ComponentProps<typeof StickToBottom.Content>) {
-  return <StickToBottom.Content className={className} {...props} />;
+  // `overflow-anchor: none` disables the browser's native scroll anchoring on
+  // the scroll container. use-stick-to-bottom pins to the bottom by writing
+  // scrollTop manually; without this, native anchoring corrects the same height
+  // delta during streaming and the two fight, causing the scroll to jump/lurch.
+  const mergedScrollClassName = scrollClassName
+    ? `[overflow-anchor:none] ${scrollClassName}`
+    : '[overflow-anchor:none]';
+
+  return (
+    <StickToBottom.Content
+      className={className}
+      scrollClassName={mergedScrollClassName}
+      {...props}
+    />
+  );
 }
