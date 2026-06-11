@@ -1,4 +1,5 @@
 import { useLocation } from 'react-router';
+import { LoadingLogo } from '../Logo';
 import { EmptyState } from './EmptyState';
 import { MessageAvatar } from './MessageAvatar';
 import { UserMessage } from './UserMessage';
@@ -12,6 +13,7 @@ import {
 interface MessagesProps {
   messages: any[];
   status: string;
+  isLoadingConversation?: boolean;
   starterQuestions: string[];
   onStarterQuestion: (question: string) => void;
   onRegenerateLastMessage?: () => void;
@@ -99,6 +101,7 @@ function hasMessageContent(message: any): boolean {
 export function Messages({
   messages,
   status,
+  isLoadingConversation = false,
   starterQuestions,
   onStarterQuestion,
   onRegenerateLastMessage,
@@ -109,6 +112,17 @@ export function Messages({
   const isStreaming = status === 'submitted' || status === 'streaming';
   // Check if there's a user message to regenerate
   const hasUserMessage = messages.some(m => m.role === 'user');
+
+  // While a saved conversation is being fetched there are no messages yet;
+  // show a loading indicator rather than the bare empty-state logo, which is
+  // indistinguishable from a stuck/never-resolving screen.
+  if (messages.length === 0 && isLoadingConversation) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <LoadingLogo />
+      </div>
+    );
+  }
 
   return (
     <>

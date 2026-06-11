@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { DBConversationMessage, Conversation } from '../../types';
 
 export type { DBConversationMessage as ConversationMessage, Conversation };
@@ -18,6 +18,11 @@ export function useConversations() {
     useState<Conversation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Monotonic token used to ignore responses from loads/creates that have
+  // been superseded by a newer one (or by clearing the conversation). Without
+  // this, a slow load can resolve after the user has cleared or switched
+  // conversations and resurrect the stale conversation.
+  const activeRequestRef = useRef(0);
 
   // Fetch all conversations
   const fetchConversations = useCallback(async () => {
@@ -51,6 +56,7 @@ export function useConversations() {
   // Create a new conversation
   const createConversation = useCallback(
     async (title?: string): Promise<Conversation | null> => {
+      const requestId = ++activeRequestRef.current;
       try {
         setIsLoading(true);
         const response = await fetch('/api/conversations', {
@@ -61,6 +67,7 @@ export function useConversations() {
         if (!response.ok) throw new Error('Failed to create conversation');
         const conversation = await response.json();
         setConversations(prev => [conversation, ...prev]);
+        if (requestId !== activeRequestRef.current) return null;
         setCurrentConversation(conversation);
         setError(null);
         return conversation;
@@ -77,6 +84,7 @@ export function useConversations() {
   // Load a specific conversation
   const loadConversation = useCallback(
     async (id: string): Promise<Conversation | null> => {
+      const requestId = ++activeRequestRef.current;
       try {
         setIsLoading(true);
         const response = await fetch(`/api/conversations/${id}`, {
@@ -84,14 +92,20 @@ export function useConversations() {
         });
         if (!response.ok) throw new Error('Failed to load conversation');
         const conversation = await response.json();
+        // A newer load/create/clear happened while we were fetching; discard.
+        if (requestId !== activeRequestRef.current) return null;
         setCurrentConversation(conversation);
         setError(null);
         return conversation;
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
+        if (requestId === activeRequestRef.current) {
+          setError(err instanceof Error ? err.message : 'Unknown error');
+        }
         return null;
       } finally {
-        setIsLoading(false);
+        if (requestId === activeRequestRef.current) {
+          setIsLoading(false);
+        }
       }
     },
     []
@@ -215,6 +229,9 @@ export function useConversations() {
 
   // Clear current conversation (start fresh without saving)
   const clearCurrentConversation = useCallback(() => {
+    // Invalidate any in-flight load so it can't resurrect the conversation
+    // we're clearing.
+    activeRequestRef.current++;
     setCurrentConversation(null);
   }, []);
 

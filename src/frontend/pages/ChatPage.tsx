@@ -44,6 +44,7 @@ export function ChatPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [initialLoadDone, setInitialLoadDone] = useState(false);
+  const [isLoadingConversation, setIsLoadingConversation] = useState(false);
   const [selectedPhilosophers, setSelectedPhilosophers] = useState<string[]>(
     () => {
       try {
@@ -175,77 +176,65 @@ export function ChatPage() {
 
   const isProcessing = status === 'submitted' || status === 'streaming';
 
-  // Load conversation from URL on mount or when URL changes
-  useEffect(() => {
-    const loadFromUrl = async () => {
-      const urlConversationId = getConversationIdFromUrl(id);
-
-      // If there's a conversation ID in the URL
-      if (urlConversationId) {
-        // Only load if we don't already have this conversation
-        // This prevents reloading when we just created it and navigated to its URL
-        if (currentConversation?.id !== urlConversationId) {
-          isLoadingMessagesRef.current = true;
-          const conversation = await loadConversation(urlConversationId);
-          if (conversation?.messages) {
-            setMessages(conversation.messages.map(dbMessageToUIMessage));
-          }
-          // Reset the flag after a short delay to allow the effect to run
-          setTimeout(() => {
-            isLoadingMessagesRef.current = false;
-          }, 100);
+  // Load a conversation into the view, showing a loading state and ignoring
+  // responses that have been superseded (the hook returns null for those, so
+  // we never wipe or overwrite the current view with stale data).
+  const loadConversationIntoView = useCallback(
+    async (conversationId: string) => {
+      isLoadingMessagesRef.current = true;
+      setIsLoadingConversation(true);
+      try {
+        const conversation = await loadConversation(conversationId);
+        if (conversation) {
+          setMessages(
+            (conversation.messages ?? []).map(dbMessageToUIMessage)
+          );
         }
-      }
-      setInitialLoadDone(true);
-    };
-    loadFromUrl();
-  }, [id]);
-
-  // Handle browser back/forward
-  useEffect(() => {
-    const handlePopState = async () => {
-      const urlConversationId = getConversationIdFromUrl(id);
-      if (urlConversationId) {
-        isLoadingMessagesRef.current = true;
-        const conversation = await loadConversation(urlConversationId);
-        if (conversation?.messages) {
-          setMessages(conversation.messages.map(dbMessageToUIMessage));
-        } else {
-          setMessages([]);
-        }
+        return conversation;
+      } finally {
+        setIsLoadingConversation(false);
+        // Reset the flag after a short delay to allow the auto-save effect to run
         setTimeout(() => {
           isLoadingMessagesRef.current = false;
         }, 100);
+      }
+    },
+    [loadConversation, setMessages]
+  );
+
+  // The URL is the source of truth for which conversation is shown. This runs
+  // on mount and whenever the URL id changes (including browser back/forward,
+  // which react-router surfaces via useParams).
+  useEffect(() => {
+    const syncFromUrl = async () => {
+      const urlConversationId = getConversationIdFromUrl(id);
+
+      if (urlConversationId) {
+        // Load it unless we already have it (prevents reloading a conversation
+        // we just created and navigated to, which would wipe the in-progress
+        // message).
+        if (currentConversation?.id !== urlConversationId) {
+          await loadConversationIntoView(urlConversationId);
+        }
       } else {
+        // No conversation in the URL (fresh "/", Clear, or back to home):
+        // reset the view.
         setMessages([]);
         clearCurrentConversation();
       }
+      setInitialLoadDone(true);
     };
+    syncFromUrl();
+  }, [id]);
 
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [id, loadConversation, setMessages, clearCurrentConversation]);
-
-  // Sync URL when conversation changes
+  // Forward-only URL sync: when a conversation becomes current (e.g. just
+  // created) push its URL. We never navigate to "/" here — clearing is driven
+  // explicitly by the handlers below so an in-flight load can't be bounced to
+  // the landing page before it resolves.
   useEffect(() => {
     if (!initialLoadDone) return;
-
-    const newPath = currentConversation?.id
-      ? `/c/${currentConversation.id}`
-      : '/';
-
-    // Only navigate if the URL actually needs to change
-    // This prevents unnecessary navigation that would reload the conversation
-    const currentPath = window.location.pathname;
-    const currentId = id; // from useParams
-
-    // If we're creating a new conversation and not on that URL yet, navigate
-    if (currentConversation?.id && currentId !== currentConversation.id) {
-      navigate(newPath, { replace: true });
-    }
-    // If we're clearing and not on root, navigate to root
-    else if (!currentConversation && currentPath !== '/') {
-      navigate('/', { replace: true });
+    if (currentConversation?.id && id !== currentConversation.id) {
+      navigate(`/c/${currentConversation.id}`, { replace: true });
     }
   }, [currentConversation?.id, initialLoadDone, navigate, id]);
 
@@ -341,28 +330,24 @@ export function ChatPage() {
   };
 
   const handleSelectConversation = async (id: string) => {
-    isLoadingMessagesRef.current = true;
-    const conversation = await loadConversation(id);
-    if (conversation?.messages) {
-      setMessages(conversation.messages.map(dbMessageToUIMessage));
-    } else {
-      setMessages([]);
-    }
-    setTimeout(() => {
-      isLoadingMessagesRef.current = false;
-    }, 100);
+    await loadConversationIntoView(id);
   };
 
   const handleDeleteConversation = async (id: string) => {
+    const wasCurrent = currentConversation?.id === id;
     await deleteConversation(id);
-    if (currentConversation?.id === id) {
+    if (wasCurrent) {
       setMessages([]);
+      navigate('/', { replace: true });
     }
   };
 
   const handleStartNewChat = () => {
     setMessages([]);
     clearCurrentConversation();
+    if (window.location.pathname !== '/') {
+      navigate('/', { replace: true });
+    }
   };
 
   const handleRegenerateLastMessage = useCallback(() => {
@@ -518,6 +503,7 @@ export function ChatPage() {
                 <Messages
                   messages={messages}
                   status={status}
+                  isLoadingConversation={isLoadingConversation}
                   starterQuestions={randomQuestions}
                   onStarterQuestion={handleStarterQuestion}
                   onRegenerateLastMessage={handleRegenerateLastMessage}
